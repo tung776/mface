@@ -22,67 +22,30 @@ module.exports = function (app, passport , obj) {
         }
         res.render('Front/index.ejs', data);
     });
-    app.get('/ajax/data_user', (req, res) => {
-        var ranpic1 = Math.floor((Math.random() * 1000) + 1);
-        var ranpic2 = Math.floor((Math.random() * 1001) + 1);
-        var ranpic3 = Math.floor((Math.random() * 1002) + 1);
-        var ranpic4 = Math.floor((Math.random() * 1003) + 1);
-        var dataAjax = [
-            {
-                link: '#',
-                srcImages: 'https://picsum.photos/' + ranpic1 + '/' + Math.floor(220 * ranpic1 / 160) + '/?random',
-                altImages: '',
-                inforName: 'Trí Lục Siêu Phàm 1',
-                inforDes: 'Lorem ipsum dolor sit amet.',
-                inforPrice: '100.000'
-            },
-            {
-                link: '#',
-                srcImages: 'https://picsum.photos/' + ranpic2 + '/' + Math.floor(220 * ranpic2 / 160) + '/?random',
-                altImages: '',
-                inforName: 'Trí Lục Siêu Phàm 2',
-                inforDes: 'Lorem ipsum dolor sit amet.',
-                inforPrice: '200.000'
-            },
-            {
-                link: '#',
-                srcImages: 'https://picsum.photos/' + ranpic3 + '/' + Math.floor(220 * ranpic3 / 160) + '?random',
-                altImages: '',
-                inforName: 'Trí Lục Siêu Phàm 3',
-                inforDes: 'Lorem ipsum dolor sit amet.',
-                inforPrice: '200.000'
-            },
-            {
-                link: '#',
-                srcImages: 'https://picsum.photos/' + ranpic4 + '/' + Math.floor(220 * ranpic4 / 160) + '?random',
-                altImages: '',
-                inforName: 'Trí Lục Siêu Phàm 4',
-                inforDes: 'Lorem ipsum dolor sit amet.',
-                inforPrice: '300.000'
-            }
-        ]
-        res.json(dataAjax);
+    app.get('/sign-up', (req, res) => {
+        var data = {
+            assetURL: getURL(req),
+            objectServer : obj,
+            appTitle : "sign up page -- "+ Config.app.name,
+            appName : Config.app.name,
+            appDescription : Config.app.description,
+            linkGoogleApp : Config.app.linkGoogleApp,
+            linkAppleApp   : Config.app.linkAppleApp
+        }
+        res.render('Front/sign-up.ejs', data);
     });
 
-    app.get('/san-pham', (req, res, next) => {
-        if (!req.isAuthenticated()) {
-            res.redirect('/login');
-        } else {
-            next();
-        }
-    }, (req, res) => {
+    app.get('/sign-in', (req, res) => {
         var data = {
             assetURL: getURL(req),
-            username: req.user.username
+            objectServer : obj,
+            appTitle : "sign in page -- "+ Config.app.name,
+            appName : Config.app.name,
+            appDescription : Config.app.description,
+            linkGoogleApp : Config.app.linkGoogleApp,
+            linkAppleApp   : Config.app.linkAppleApp
         }
-        res.render('Front/san-pham.ejs', data);
-    });
-    app.get('/testname',(req, res) => {
-        var data = {
-            assetURL: getURL(req),
-            username: 12345
-        }
-        res.render('Front/about.ejs', data);
+        res.render('Front/sign-in.ejs', data);
     });
     app.get('/login', (req, res, next) => {
         if (req.isAuthenticated()) {

@@ -16,7 +16,7 @@ module.exports = {
 			link : nonssl+domainLocal+":"+portLocal
 		},
 		inServer : {
-			link : ssl+domainServer+":"+portServer
+			link : ssl+domainServer
 		}
 
 	},

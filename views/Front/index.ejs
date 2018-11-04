@@ -474,7 +474,7 @@
                 <h2>{{appName}}</h2>
             </div>
             <!-- social icon-->
-            <div class="footer-social-icon" v-if="social">
+            <div class="footer-social-icon" v-if="dataContact.social">
                 <a href="#"><i class="fa fa-facebook" aria-hidden="true"></i></a>
                 <a href="#"><i class="active fa fa-twitter" aria-hidden="true"></i></a>
                 <a href="#"> <i class="fa fa-instagram" aria-hidden="true"></i></a>
@@ -501,7 +501,7 @@
             data: {
                 appName: '<%=appName%>',
                 btnSignInFree: "đăng kí miễn phí",
-                link_btnSignInFree: "#",
+                link_btnSignInFree: "<%=objectServer.linkDomain%>/sign-up",
                 appDescription: '<%=appDescription%>',
                 linkGoogleApp: '<%=linkGoogleApp%>',
                 linkAppleApp: '<%=linkAppleApp%>',

@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="description" content="">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <!-- The above 4 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <!-- Title -->
+    <title>
+        <%=appTitle%>
+    </title>
+    <!-- Favicon -->
+    <link rel="icon" href="public/img/core-img/favicon.ico">
+    <!-- Core Stylesheet -->
+    <link href="public/style.css" rel="stylesheet">
+    <!-- Responsive CSS -->
+    <link href="public/css/responsive.css" rel="stylesheet">
+    <!-- vue JS -->
+    <style>
+        input{
+            background: #9572e8;
+            height: 50px;
+            border: none;
+            border-radius: 24px;
+            padding: 0px 15px;
+        }
+        .mgT140px{
+            margin-top: 140px
+        }
+        .wellcome_area .sign-up-btn-page > a {
+            color: #fff;
+            font-weight: 500;
+            display: block;
+            border: 2px solid #a883e9;
+            height: 50px;
+            line-height: 46px;
+            text-align: center;
+            border-radius: 24px 24px 24px 0px;
+        }
+        .wellcome_area .sign-up-btn-page > a:hover {
+            background: #fb397d;
+            color: #fff;
+            border-color: transparent;
+            -webkit-transition-duration: 500ms;
+            -o-transition-duration: 500ms;
+            transition-duration: 500ms;
+        }
+        .fixCenter{
+            margin: 0 auto
+        }
+        .wellcome_area p{
+            color: #fff
+        }
+        .wellcome_area a{
+            color: #111
+        }
+    </style>
+</head>
+
+<body>
+    <div id="wrapper__page_home">
+        <!-- Preloader Start -->
+        <div id="preloader">
+            <div class="colorlib-load"></div>
+        </div>
+
+        <!-- ***** Header Area Start ***** -->
+        <header class="header_area animated">
+            <div class="container-fluid">
+                <div class="row align-items-center">
+                    <!-- Menu Area Start -->
+                    <div class="col-12 col-lg-10">
+                        <div class="menu_area">
+                            <nav class="navbar navbar-expand-lg navbar-light">
+                                <!-- Logo -->
+                                <a class="navbar-brand" :href="dataHeader.linkHomePage">{{appName}}</a>
+                                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#ca-navbar"
+                                    aria-controls="ca-navbar" aria-expanded="false" aria-label="Toggle navigation"><span
+                                        class="navbar-toggler-icon"></span></button>
+                                <!-- Menu Area -->
+                                <div class="collapse navbar-collapse" id="ca-navbar">
+                                    <ul class="navbar-nav ml-auto" id="nav">
+                                        <li class="nav-item" :style="dataHeader.showMenuStyle">
+                                            <a class="nav-link" href="#">home</a>
+                                        </li>
+                                    </ul>
+                                    <div class="sing-up-button d-lg-none">
+                                        <a :href="link_btnSignInFree">{{btnSignInFree}}</a>
+                                    </div>
+                                </div>
+                            </nav>
+                        </div>
+                    </div>
+                    <!-- Signup btn -->
+                    <div class="col-12 col-lg-2">
+                        <div class="sing-up-button d-none d-lg-block">
+                            <a :href="link_btnSignInFree">{{btnSignInFree}}</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+        <!-- ***** Header Area End ***** -->
+
+        <!-- ***** Wellcome Area Start ***** -->
+        <section class="wellcome_area clearfix" :style="{'background' : 'url('+dataWelcome.bg_image+')', 'height': 'inherit', 'min-height':heightWindows+'px'}">
+            <div class="container">
+                <div class="row">
+                    <div class="col-sm-6 col-sm-push-3 fixCenter">
+                        <!-- show any messages that come back with authentication -->
+                        <!-- LOGIN FORM -->
+                        <form class="mgT140px" action="#" method="post">
+                            <div class="form-group">
+                                <input placeholder="username" type="text" class="form-control" name="username">
+                            </div>
+                            <div class="form-group">
+                                <input placeholder="Password" type="password" class="form-control" name="password">
+                            </div>
+                            <div class="sign-up-btn-page">
+                                <a :href="link_btnSignInFree">{{btnSignInFree}}</a>
+                            </div>
+                        </form>
+                        <hr>
+                        <p>don't have account? <a :href="dataHeader.linkHomePage + '/sign-up'">đăng kí</a></p>
+                        <p>Or go <a :href="dataHeader.linkHomePage">home page</a></p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- ***** Wellcome Area End ***** -->
+    </div>
+    <script crossorigin src="public/vuejs/vue.js"></script>
+    <script>
+        var app = new Vue({
+            el: '#wrapper__page_home',
+            data: {
+                appName: '<%=appName%>',
+                btnSignInFree: "đăng kí miễn phí",
+                link_btnSignInFree: "<%=objectServer.linkDomain%>/sign-up",
+                appDescription: '<%=appDescription%>',
+                linkGoogleApp: '<%=linkGoogleApp%>',
+                linkAppleApp: '<%=linkAppleApp%>',
+                heightWindows: window.innerHeight,
+                dataHeader: {
+                    linkHomePage: '<%=objectServer.linkDomain%>',
+                    showMenuStyle: {
+                        visibility: 'hidden'
+                    },
+                },
+                dataWelcome: {
+                    bg_image: "public/img/bg-img/welcome-bg-sign-up.png"
+                },
+            }
+        })
+    </script>
+    <!-- Jquery-2.2.4 JS -->
+    <script src="public/js/jquery-2.2.4.min.js"></script>
+    <!-- Popper js -->
+    <script src="public/js/popper.min.js"></script>
+    <!-- Bootstrap-4 Beta JS -->
+    <script src="public/js/bootstrap.min.js"></script>
+    <!-- All Plugins JS -->
+    <script src="public/js/plugins.js"></script>
+    <!-- Slick Slider Js-->
+    <script src="public/js/slick.min.js"></script>
+
+
+    <!-- Active JS -->
+    <script src="public/js/active.js"></script>
+
+</body>
+
+</html>
