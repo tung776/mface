@@ -1,0 +1,22 @@
+[
+    {
+        "id"   : 1,
+        "user" : "hungtt",
+        "pass" : "hungtt266"
+    },
+    {
+        "id"   : 2,
+        "user" : "thanhhung.dev@gmail.com",
+        "pass" : "1234567890"
+    },
+    {
+        "id"   : 3,
+        "user" : "thanh",
+        "pass" : "hungtt266"
+    },
+    {
+        "id"   : 4,
+        "user" : "thanhhung.dev@gmail.com",
+        "pass" : "123456789"
+    }
+]
