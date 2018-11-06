@@ -118,7 +118,8 @@
         font-size: 48px;
     }
     .header_area.sticky {
-        height: 50px;
+        height: 60px;
+        padding-top: 6px;
     }
     .header_area .menu_area #nav .nav-link,
     .header_area.sticky .menu_area #nav .nav-link {

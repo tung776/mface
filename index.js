@@ -45,13 +45,11 @@ passport.deserializeUser(function (id, done) {
         if (!data) {
             return done(null, false, req.flash('loginMessage', 'không thấy user.'));
         } else {
-            return done(null, { "username": data.local.username })
+            data.password = null;
+            return done(null, data)
         }
     });
 });
-
-
-
 
 /////////////////////////////////////////////////////////////////////////
 ///////set route project/////////////////////////////////////////////////

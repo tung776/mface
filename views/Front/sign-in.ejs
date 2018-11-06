@@ -29,17 +29,18 @@
         .mgT140px{
             margin-top: 140px
         }
-        .wellcome_area .sign-up-btn-page > a {
+        .wellcome_area .sign-up-btn-page > input.btn-submit {
             color: #fff;
             font-weight: 500;
             display: block;
             border: 2px solid #a883e9;
             height: 50px;
+            width: 100%;
             line-height: 46px;
             text-align: center;
             border-radius: 24px 24px 24px 0px;
         }
-        .wellcome_area .sign-up-btn-page > a:hover {
+        .wellcome_area .sign-up-btn-page >  input.btn-submit:hover {
             background: #fb397d;
             color: #fff;
             border-color: transparent;
@@ -87,7 +88,7 @@
                                         </li>
                                     </ul>
                                     <div class="sing-up-button d-lg-none">
-                                        <a :href="link_btnSignInFree">{{btnSignInFree}}</a>
+                                        <a :href="link_btnSignUpFree">{{btnSignUpFree}}</a>
                                     </div>
                                 </div>
                             </nav>
@@ -96,7 +97,7 @@
                     <!-- Signup btn -->
                     <div class="col-12 col-lg-2">
                         <div class="sing-up-button d-none d-lg-block">
-                            <a :href="link_btnSignInFree">{{btnSignInFree}}</a>
+                            <a :href="link_btnSignUpFree">{{btnSignUpFree}}</a>
                         </div>
                     </div>
                 </div>
@@ -110,16 +111,27 @@
                 <div class="row">
                     <div class="col-sm-6 col-sm-push-3 fixCenter">
                         <!-- show any messages that come back with authentication -->
+                        <% if (messageUP.length > 0) { %>
+                        <div class="alert alert-danger">
+                            <%= messageUP %>
+                        </div>
+                        <% } %>
+                        <% if (messageIN.length > 0) { %>
+                        <div class="alert alert-danger">
+                            <%= messageIN %>
+                        </div>
+                        <% } %>
                         <!-- LOGIN FORM -->
-                        <form class="mgT140px" action="#" method="post">
+                        <form class="mgT140px" :action="dataHeader.linkHomePage+'/sign-in'" method="post">
+
                             <div class="form-group">
-                                <input placeholder="username" type="text" class="form-control" name="username">
+                                <input placeholder="email" type="text" class="form-control" name="email">
                             </div>
                             <div class="form-group">
                                 <input placeholder="Password" type="password" class="form-control" name="password">
                             </div>
                             <div class="sign-up-btn-page">
-                                <a :href="link_btnSignInFree">{{btnSignInFree}}</a>
+                                <input class="btn-submit" type="submit" :value="btnSignInFree" />
                             </div>
                         </form>
                         <hr>
@@ -137,8 +149,9 @@
             el: '#wrapper__page_home',
             data: {
                 appName: '<%=appName%>',
-                btnSignInFree: "đăng kí miễn phí",
-                link_btnSignInFree: "<%=objectServer.linkDomain%>/sign-up",
+                btnSignUpFree: "đăng kí miễn phí",
+                btnSignInFree: "Đăng nhập",
+                link_btnSignUpFree: "<%=objectServer.linkDomain%>/sign-up",
                 appDescription: '<%=appDescription%>',
                 linkGoogleApp: '<%=linkGoogleApp%>',
                 linkAppleApp: '<%=linkAppleApp%>',

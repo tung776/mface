@@ -50,7 +50,8 @@
                                         </li>
                                     </ul>
                                     <div class="sing-up-button d-lg-none">
-                                        <a :href="link_btnSignInFree">{{btnSignInFree}}</a>
+                                        <a :href="link_btnSignInFree" v-if="!isLogin">{{btnSignInFree}}</a>
+                                        <a :href="dataUser.linkService" v-else>{{dataUser.email.split("@")[0]}}</a>
                                     </div>
                                 </div>
                             </nav>
@@ -59,7 +60,8 @@
                     <!-- Signup btn -->
                     <div class="col-12 col-lg-2">
                         <div class="sing-up-button d-none d-lg-block">
-                            <a :href="link_btnSignInFree">{{btnSignInFree}}</a>
+                                <a :href="link_btnSignInFree" v-if="!isLogin">{{btnSignInFree}}</a>
+                                <a :href="dataUser.linkService" v-else>{{dataUser.email.split("@")[0]}}</a>
                         </div>
                     </div>
                 </div>
@@ -73,7 +75,7 @@
                 <div class="row h-100 align-items-center">
                     <div class="col-12 col-md">
                         <div class="wellcome-heading">
-                            <h2>{{appName}} app</h2>
+                            <h2>{{appName}} app </h2>
                             <h3>{{appName.charAt(0)}}</h3>
                             <p>{{dataWelcome.descriptionCompany}}</p>
                         </div>
@@ -500,8 +502,13 @@
             el: '#wrapper__page_home',
             data: {
                 appName: '<%=appName%>',
-                btnSignInFree: "đăng kí miễn phí",
-                link_btnSignInFree: "<%=objectServer.linkDomain%>/sign-up",
+                dataUser : {
+                    email : '<%= (dataUser == null ? "undefined" : dataUser.email)%>',
+                    linkService : "<%=objectServer.linkDomain%>/service"
+                },
+                isLogin : <%= (dataUser == null ? false : true)%>,
+                btnSignInFree: "đăng nhập",
+                link_btnSignInFree: "<%=objectServer.linkDomain%>/sign-in",
                 appDescription: '<%=appDescription%>',
                 linkGoogleApp: '<%=linkGoogleApp%>',
                 linkAppleApp: '<%=linkAppleApp%>',
@@ -509,11 +516,11 @@
                     linkHomePage: '<%=objectServer.linkDomain%>',
                     listLinkMenu: [
                         { show: true, href: "home", text: "home" },
-                        { show: true, href: "about", text: "dịch vụ của chúng tôi" },
+                        { show: true, href: "about", text: "dịch vụ" },
                         { show: true, href: "features", text: "tính năng" },
                         { show: false, href: "screenshot", text: "Screenshot" },
-                        { show: true, href: "pricing", text: "gói dịch vụ" },
-                        { show: true, href: "team", text: "Thành Viên Team" },
+                        { show: true, href: "pricing", text: "cước phí" },
+                        { show: true, href: "team", text: "Thành Viên" },
                         { show: false, href: "team", text: "Team" },
                         { show: true, href: "contact", text: "liên hệ" }
                     ]

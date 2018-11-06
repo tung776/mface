@@ -29,17 +29,18 @@
         .mgT140px{
             margin-top: 140px
         }
-        .wellcome_area .sign-up-btn-page > a {
+        .wellcome_area .sign-up-btn-page > input {
             color: #fff;
             font-weight: 500;
             display: block;
             border: 2px solid #a883e9;
             height: 50px;
+            width: 100%;
             line-height: 46px;
             text-align: center;
             border-radius: 24px 24px 24px 0px;
         }
-        .wellcome_area .sign-up-btn-page > a:hover {
+        .wellcome_area .sign-up-btn-page > input:hover {
             background: #fb397d;
             color: #fff;
             border-color: transparent;
@@ -109,23 +110,38 @@
             <div class="container">
                 <div class="row">
                     <div class="col-sm-6 col-sm-push-3 fixCenter">
-                        <!-- show any messages that come back with authentication -->
+
                         <!-- LOGIN FORM -->
-                        <form class="mgT140px" action="#" method="post">
+                        <form class="mgT140px" :action="dataHeader.linkHomePage+'/sign-up'" method="post" @submit="checkForm"
+                            novalidate="true">
+                            <!-- show any messages that come back with authentication -->
+                            <% if (message.length > 0) { %>
+                            <div class="alert alert-danger">
+                                <%= message %>
+                            </div>
+                            <% } %>
+                            <!-- show any messages that come back with authentication -->
+                            <p v-if="errors.length">
+                                <ul>
+                                    <li v-for="error in errors">{{ error }}</li>
+                                </ul>
+                            </p>
                             <div class="form-group">
-                                <input placeholder="username" type="text" class="form-control" name="username">
+                                <input placeholder="email *" type="text" class="form-control" name="email" v-model="email">
                             </div>
                             <div class="form-group">
-                                <input placeholder="Password" type="password" class="form-control" name="password">
+                                <input placeholder="Password *" type="password" class="form-control" name="password"
+                                    v-model="password">
                             </div>
                             <div class="form-group">
-                                <input placeholder="Confirm Password" type="password" class="form-control" name="confirm">
+                                <input placeholder="Confirm Password *" type="password" class="form-control" name="confirm"
+                                    v-model="confirm">
                             </div>
                             <div class="form-group">
-                                <input placeholder="Password expecial" type="password" class="form-control" name="expecial">
+                                <input placeholder="sdt *" type="text" class="form-control" name="sdt" v-model="sdt">
                             </div>
                             <div class="sign-up-btn-page">
-                                <a :href="link_btnSignInFree">{{btnSignInFree}}</a>
+                                <input type="submit" :value="btnSignInFree" />
                             </div>
                         </form>
                         <hr>
@@ -142,6 +158,14 @@
         var app = new Vue({
             el: '#wrapper__page_home',
             data: {
+                errors: [],
+                
+                email: null,
+                password: null,
+                confirm: null,
+                sdt: null,
+
+
                 appName: '<%=appName%>',
                 btnSignInFree: "đăng kí miễn phí",
                 link_btnSignInFree: "<%=objectServer.linkDomain%>/sign-up",
@@ -158,6 +182,34 @@
                 dataWelcome: {
                     bg_image: "public/img/bg-img/welcome-bg-sign-up.png"
                 },
+            },
+            methods: {
+                checkForm: function (e) {
+                    this.errors = [];
+                    if (!this.email) {
+                        this.errors.push("Email required.");
+                    } else if (!this.validEmail(this.email)) {
+                        this.errors.push("Valid email required.");
+                    }
+                    if (!this.password) {
+                        this.errors.push("password required.");
+                    }else{
+                        if (this.password.length < 6) this.errors.push("password 6.");
+                    }
+                    
+                    if (this.password != this.confirm) this.errors.push("confirm isvalid.");
+                    if (!this.sdt) {
+                        this.errors.push("sdt required.");
+                    }else{
+                        if (this.sdt.length < 9) this.errors.push("sdt 9.");
+                    }
+                    if (!this.errors.length) return true;
+                    e.preventDefault();
+                },
+                validEmail: function (email) {
+                    var re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+                    return re.test(email);
+                }
             }
         })
     </script>
