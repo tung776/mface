@@ -208,6 +208,27 @@ module.exports = function (app, passport, obj) {
         }
         res.render('Front/running.ejs', data);
     });
+    app.get("/selenium", function (req, res) {
+        var webdriver = require('selenium-webdriver');
+        var By = webdriver.By;
+        var driver = new webdriver.Builder()
+            .forBrowser('phantomjs')
+            .build();
+        driver.get('http://www.google.com/ncr');
+        driver.findElement(By.name('q')).sendKeys('webdriver');
+        driver.findElement(By.name('btnG')).click();
+        driver.wait(function () {
+            return driver.getTitle().then(function (title) {
+                console.log(title);
+                return title === 'webdriver - Google Search';
+            });
+        }, 5000).then(function () {
+            res.status(200).send('Done');
+        }, function (error) {
+            res.status(200).send(error);
+        });
+        driver.quit();
+    });
     app.post("/run-service", (req, res, next) => {
         if (!req.isAuthenticated()) {
             res.redirect('/sign-in');
@@ -227,24 +248,20 @@ module.exports = function (app, passport, obj) {
         console.log(linkgroup);
         console.log(messageClient);
         //const webdriver = require('selenium-webdriver');
-        var webdriver = require('selenium-webdriver'),
-            Capabilities = webdriver.Capabilities;
-
-        var capability = Capabilities
-            .phantomjs()
-            .set('phantomjs.cli.args', '--ignore-ssl-errors=true');
+        var webdriver = require('selenium-webdriver');
+        var By = webdriver.By;
         (async function () {
             try {
-                //var chromeCapabilities = webdriver.Capabilities.chrome()
-                //var chromeOptions = {
-                //    'args': ['--disable-infobars', "--disable-notifications"]
-                //};
-                //chromeCapabilities.set('chromeOptions', chromeOptions);
-                //var driver1 = new webdriver.Builder().forBrowser('chrome').withCapabilities(chromeCapabilities).build();
+                var chromeCapabilities = webdriver.Capabilities.chrome()
+                var chromeOptions = {
+                    'args': ['--disable-infobars', "--disable-notifications"]
+                };
+                chromeCapabilities.set('chromeOptions', chromeOptions);
+                var driver1 = new webdriver.Builder().forBrowser('chrome').withCapabilities(chromeCapabilities).build();
                 var driver = new webdriver
-            .Builder()
-            .withCapabilities(capability)
-            .build();
+                    .Builder()
+                    .withCapabilities(capability)
+                    .build();
                 await driver.get('http://www.facebook.com')
 
 
@@ -294,27 +311,40 @@ module.exports = function (app, passport, obj) {
             }
         })()
     });
-    app.get('/phantom', (req, res)=>{
+    app.get('/phantom', (req, res) => {
         var phantom = require('phantom');
-	var _ph, _page, _outObj;
+        var _ph, _page, _outObj;
 
-	phantom.create().then(ph => {
-	    _ph = ph;
-	    return _ph.createPage();
-	  }).then(page => {
-	    _page = page;
-	    return _page.open('https://stackoverflow.com/');
-	  }).then(status => {
-	    console.log(status);
-	    var content = _page.property('content');
-	    return content;
-	  }).then(content => {
-	    console.log(content);
-	    res.send(content);  
-	    _page.close();
-	    _ph.exit();
-	  })
-	  .catch(e => console.log(e));  
+        phantom.create().then(ph => {
+            _ph = ph;
+            return _ph.createPage();
+        }).then(page => {
+            _page = page;
+            return _page.open('https://stackoverflow.com/');
+        }).then(status => {
+            console.log(status);
+            var content = _page.property('content');
+            return content;
+        }).then(content => {
+            console.log(content);
+            res.send(content);
+            _page.close();
+            _ph.exit();
+        })
+            .catch(e => console.log(e));
     });
 }
 
+
+// var phantomCapabilities = webdriver.Capabilities.phantomjs();
+// var phantomOptions = {
+//     'args': ['--disable-infobars', "--disable-notifications"]
+// };
+// var driver1 = new webdriver.Builder().forBrowser('chrome').withCapabilities(chromeCapabilities).build();
+// phantomCapabilities.set('phantomjs.cli.args', '--ignore-ssl-errors=true');
+
+// ///////////////////////////////////////////////////
+// var webdriver = require('selenium-webdriver');var phantomjs = require('phantomjs');var driver = new webdriver.Builder().withCapabilities({"phantomjs.binary.path":phantomjs.path}).forBrowser('phantomjs').build();
+// /////////////////////////////////////////////////////
+// var webdriver = require('selenium-webdriver');var driver2 = new webdriver.Builder().withCapabilities(webdriver.Capabilities.phantomjs().set("phantomjs.page.settings.userAgent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.115 Safari/537.36")).build();
+// //////////////////////////////////////////
