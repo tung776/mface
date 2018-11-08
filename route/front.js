@@ -11,31 +11,43 @@ function getURL(req) {
 
 module.exports = function (app, passport, obj) {
     const numbermemberajax = 400;
-    const stringScriptSelFirst = `
-    document.getElementById("groupsMemberSection_recently_joined").getElementsByClassName("stat_elem")[0].className = document.getElementById("groupsMemberSection_recently_joined").getElementsByClassName("stat_elem")[0].className.replace("mam", "").replace("uiMorePager", "").replace("stat_elem", "").replace("morePager", "") + " mface_action_remove";
-    document.getElementById("groupsMemberSection_recently_joined").getElementsByClassName("uiMorePagerPrimary")[document.getElementById("groupsMemberSection_recently_joined").getElementsByClassName("uiMorePagerPrimary").length - 1].href = document.getElementById("groupsMemberSection_recently_joined").getElementsByClassName("uiMorePagerPrimary")[document.getElementById("groupsMemberSection_recently_joined").getElementsByClassName("uiMorePagerPrimary").length - 1].href.replace('limit=15&', 'limit=400&');
-    document.getElementsByClassName("mface_action_remove")[0].scrollIntoView();
-    console.clear();
-    `;
-    const stringScriptSelSecond = `
-        console.clear();
-        document.getElementsByClassName("mface_action_remove")[0].remove();  
-        var list_stat_elem = document.getElementById("groupsMemberSection_recently_joined").getElementsByClassName("stat_elem");
-        var stat_elem = list_stat_elem[list_stat_elem.length - 1]
-        var classReplace = stat_elem.className.replace("mam", "").replace("uiMorePager", "").replace("stat_elem", "").replace("morePager", "");
-        stat_elem.className = classReplace + " mface_action_remove";
-        var tagAMore = document.getElementById("groupsMemberSection_recently_joined").getElementsByClassName("uiMorePagerPrimary")[0];
-        tagAMore.href = tagAMore.href.replace('limit=15&', 'limit=400&');
-        var scrollwindowmface =  window.scrollTo(0,document.body.scrollHeight);
 
-        tagAMore.click();
-    `;
     const stringScriptSelenium = `
     var xemthem = document.getElementById("groupsMemberSection_recently_joined").getElementsByClassName("stat_elem")[0].getElementsByTagName('a')[0];
 	xemthem.href = xemthem.href.replace('&limit=15&', '&limit=`+ numbermemberajax + `&');
 	console.log(xemthem.href);
-	xemthem.click();
+    xemthem.click();
+    window.setTimeout(arguments[arguments.length - 1], 8000);
     `;
+    function createStringScriptSelenium( numbermemberajax) {
+        return `
+        if(!document.getElementById("MFace_old_document_height")){
+            var parent = document.getElementsByTagName('body')[0];
+            var newChild = '<p id="MFace_old_document_height">0</p>';
+            parent.insertAdjacentHTML('afterbegin', newChild);
+        }
+
+        
+        var old_document_height = document.body.clientHeight;
+        document.getElementById("MFace_old_document_height").innerHTML = old_document_height;
+
+        var xemthem = document.getElementById("groupsMemberSection_recently_joined").getElementsByClassName("stat_elem")[0].getElementsByTagName('a')[0];
+        xemthem.href = xemthem.href.replace('&limit=15&', '&limit=400&');
+        console.log(xemthem.href);
+        xemthem.click();
+
+        window.setTimeout(function(){
+            var old_docu_height = document.getElementById("MFace_old_document_height").innerHTML;
+            console.log("trước là hàng cũ trước 5s "+ old_docu_height + " / " + document.body.clientHeight + " " + new Date())
+            if(old_docu_height < document.body.clientHeight){
+                console.log("lớn hơn rùi" + new Date())
+                arguments[arguments.length - 1];
+            }else{
+                console.log(123456789);
+            }
+        },6000);
+        `;
+    };
     app.get('/', (req, res) => {
 
         var data = {
@@ -189,13 +201,7 @@ module.exports = function (app, passport, obj) {
         }
         return res.render('Front/service.ejs', data);
     });
-    app.get('/running', (req, res, next) => {
-        if (!req.isAuthenticated()) {
-            res.redirect('/sign-in');
-        } else {
-            next();
-        }
-    }, function (req, res) {
+    app.get('/running', function (req, res) {
         var data = {
             assetURL: getURL(req),
             objectServer: obj,
@@ -208,83 +214,169 @@ module.exports = function (app, passport, obj) {
         }
         res.render('Front/running.ejs', data);
     });
-    app.get("/selenium", function (req, res) {
-        var webdriver = require('selenium-webdriver');
-        var By = webdriver.By;
-        var driver = new webdriver.Builder()
-            .forBrowser('phantomjs')
-            .build();
-        // driver.get('http://www.google.com/ncr');
-        // driver.findElement(By.name('q')).sendKeys('webdriver');
-        // driver.findElement(By.name('btnG')).click();
-        // driver.wait(function () {
-        //     return driver.getTitle().then(function (title) {
-        //         console.log(title);
-        //         return title === 'webdriver - Google Search';
-        //     });
-        // }, 5000).then(function () {
-        //     res.status(200).send('Done');
-        // }, function (error) {
-        //     res.status(200).send(error);
-        // });
-        // driver.quit();
-        var username = '';
-        var password = '';
-        var linkgroup = 'https://www.facebook.com/groups/TOEICTNTRAM/members/';
-        var messageClient = 'req.body.message';
-        if (!username.trim()) { username = 'jbtruongthanhhung@gmail.com'; password = 'hungtt@266' }
-        console.log(username);
-        console.log(password);
-        console.log(linkgroup);
-        console.log(messageClient);
-        //const webdriver = require('selenium-webdriver');
-        (async function () {
-            try {
-                await driver.get('http://www.facebook.com')
-                var email = await driver.findElement(webdriver.By.name('email'));
-                var pass = await driver.findElement(webdriver.By.name('pass'));
-                await email.sendKeys(username)
-                await pass.sendKeys(password)
-                await pass.submit();//https://www.facebook.com/groups/TOEICTNTRAM/members/
-                await driver.get(linkgroup)
-                var title = await driver.getTitle()
-                console.log('Page title is: ' + title);
-                // # . > div.clearfix mam uiMorePager stat_elem morePager > a.pam uiBoxLightblue.uiMorePagerPrimary
-                // continues : facebook create : div.fbProfileBrowserList > div.clearfix.mam.uiMorePager.stat_elem.morePager
-                // chuyển kiểu của đối tượng driver thành JavascriptExecutor
-                //JavascriptExecutor js = (JavascriptExecutor) driver;
-                // sử dụng các methods
-                //js.executeScript(stringScriptSelenium);  WebDriver executeAsyncScript
+    app.get("/selenium/phantom", function (req, res) {
+        try {
+            res.redirect('/running');
+            var webdriver = require('selenium-webdriver');
+            var By = webdriver.By;
+            var driver = new webdriver.Builder()
+                .forBrowser('phantomjs')
+                .build();
+            // driver.get('http://www.google.com/ncr');
+            // driver.findElement(By.name('q')).sendKeys('webdriver');
+            // driver.findElement(By.name('btnG')).click();
+            // driver.wait(function () {
+            //     return driver.getTitle().then(function (title) {
+            //         console.log(title);
+            //         return title === 'webdriver - Google Search';
+            //     });
+            // }, 5000).then(function () {
+            //     res.status(200).send('Done');
+            // }, function (error) {
+            //     res.status(200).send(error);
+            // });
+            // driver.quit();
+            var username = '';
+            var password = '';
+            var linkgroup = 'https://www.facebook.com/groups/TOEICTNTRAM/members/';
+            var messageClient = 'req.body.message';
+            if (!username.trim()) { username = 'jbtruongthanhhung@gmail.com'; password = 'hungtt@266' }
+            console.log(username);
+            console.log(password);
+            console.log(linkgroup);
+            console.log(messageClient);
+            //const webdriver = require('selenium-webdriver');
+            (async function () {
                 try {
-                    var numbersMember = await driver.findElement(webdriver.By.id('groupsMemberBrowser')).findElement(webdriver.By.className('_grm')).findElement(webdriver.By.tagName('span')).getText();
-                    console.log(numbersMember);
-                    var numberIndexFor = Math.ceil((numbersMember - 15.0) / numbermemberajax);
-                    for (var i = 0; i < numberIndexFor; i++) {
-                        await driver.executeAsyncScript(stringScriptSelenium).then(() => { }, err => {
-                            console.log("lỗi trong exc : " + i + " / " + err);
+                    await driver.get('http://www.facebook.com')
+                    var email = await driver.findElement(webdriver.By.name('email'));
+                    var pass = await driver.findElement(webdriver.By.name('pass'));
+                    await email.sendKeys(username)
+                    await pass.sendKeys(password)
+                    await pass.submit();//https://www.facebook.com/groups/TOEICTNTRAM/members/
+                    await driver.get(linkgroup)
+                    var title = await driver.getTitle()
+                    console.log('Page title is: ' + title);
+                    // # . > div.clearfix mam uiMorePager stat_elem morePager > a.pam uiBoxLightblue.uiMorePagerPrimary
+                    // continues : facebook create : div.fbProfileBrowserList > div.clearfix.mam.uiMorePager.stat_elem.morePager
+                    // chuyển kiểu của đối tượng driver thành JavascriptExecutor
+                    //JavascriptExecutor js = (JavascriptExecutor) driver;
+                    // sử dụng các methods
+                    //js.executeScript(stringScriptSelenium);  WebDriver executeAsyncScript
+                    try {
+                        var numbersMember = await driver.findElement(webdriver.By.id('groupsMemberBrowser')).findElement(webdriver.By.className('_grm')).findElement(webdriver.By.tagName('span')).getText();
+                        numbersMember = numbersMember.replace(/\./g, "");
+                        numbersMember = parseInt(numbersMember);
+                        var numberIndexFor = Math.ceil((numbersMember - 15.0) / numbermemberajax);
+                        console.log(numberIndexFor);
+                        numberIndexFor = numberIndexFor > 2 ? 2 : numberIndexFor;
+                        for (var i = 0; i < numberIndexFor; i++) {
+                            console.log('begin đang chạy lần thứ : ' + i);
+                            await driver.executeAsyncScript(stringScriptSelenium).then(() => { }, err => {
+                                console.log("lỗi trong exc : " + i + " / " + err);
+                            });
+                            console.log('end đang chạy lần thứ : ' + i);
+                        }
+                        await driver.findElement(webdriver.By.id('groupsMemberSection_recently_joined')).getAttribute("innerHTML").then(function (profile) {
+                            const cheerio = require('cherio')
+                            const $ = cheerio.load(profile)
+                            var data_id_user = [];
+                            $('._gse[data-name=GroupProfileGridItem]').each(function (i, elem) {
+                                // Range Name
+                                console.log("iteration - ", i);
+                                console.log("name - ", $(this).attr('id'));
+                                data_id_user.push($(this).attr('id'));
+                            });
+                            //console.log(data_id_user);
                         });
+                        await driver.quit();
+                    } catch (e) {
+                        console.log("err catch" + e);
+                        await driver.quit();
                     }
-                    await driver.findElement(webdriver.By.id('groupsMemberSection_recently_joined')).getAttribute("innerHTML").then(function (profile) {
-                        const cheerio = require('cherio')
-                        const $ = cheerio.load(profile)
-                        var data_id_user = [];
-                        $('._gse[data-name=GroupProfileGridItem]').each(function (i, elem) {
-                            // Range Name
-                            console.log("iteration - ", i);
-                            console.log("name - ", $(this).attr('id'));
-                            data_id_user.push($(this).attr('id'));
-                        });
-                        //console.log(data_id_user);
-                    });
-                    await driver.quit();
                 } catch (e) {
-                    console.log("err catch" + e);
-                    await driver.quit();
+                    console.log('lỗi : ', e);
                 }
-            } catch (e) {
-                console.log('lỗi : ', e);
-            }
-        })()
+            })()
+        } catch (e) {
+            console.log("lỗi selenium ngoài cùng!" + e)
+        }
+    });
+    app.get("/selenium/chrome", function (req, res) {
+        try {
+            res.redirect('/running');
+            var webdriver = require('selenium-webdriver');
+            var chromeCapabilities = webdriver.Capabilities.chrome()
+            var chromeOptions = {
+                'args': ['--disable-infobars', "--disable-notifications"]
+            };
+            chromeCapabilities.set('chromeOptions', chromeOptions);
+            var driver = new webdriver.Builder()
+                .forBrowser('chrome')
+                .withCapabilities(chromeCapabilities)
+                .build();
+            var username = '';
+            var password = '';
+            var linkgroup = 'https://www.facebook.com/groups/1365709000190455/members/';
+            var messageClient = 'req.body.message';
+            if (!username.trim()) { username = 'jbtruongthanhhung@gmail.com'; password = 'hungtt@266' }
+            console.log(username);
+            console.log(password);
+            console.log(linkgroup);
+            console.log(messageClient);
+            //const webdriver = require('selenium-webdriver');
+            (async function () {
+                try {
+                    await driver.get('http://www.facebook.com')
+                    var email = await driver.findElement(webdriver.By.name('email'));
+                    var pass = await driver.findElement(webdriver.By.name('pass'));
+                    await email.sendKeys(username)
+                    await pass.sendKeys(password)
+                    await pass.submit();//https://www.facebook.com/groups/TOEICTNTRAM/members/
+                    driver.manage().timeouts().setScriptTimeout(12000);
+                    await driver.get(linkgroup)
+                    var title = await driver.getTitle()
+                    console.log('Page title is: ' + title);
+                    try {
+                        var numbersMember = await driver.findElement(webdriver.By.id('groupsMemberBrowser')).findElement(webdriver.By.className('_grm')).findElement(webdriver.By.tagName('span')).getText();
+                        numbersMember = numbersMember.replace(/\./g, "");
+                        numbersMember = parseInt(numbersMember);
+                        var numberIndexFor = Math.ceil((numbersMember - 15.0) / numbermemberajax);
+                        console.log(numberIndexFor);
+                        for (var i = 0; i < numberIndexFor; i++) {
+                            console.log('begin đang chạy lần thứ : ' + i);
+                            await driver.executeAsyncScript(stringScriptSelenium).then((data) => {
+                                console.log("đây là return not timeout của data : " + data);
+                            }, err => {
+                                console.log(new Date());
+                                console.log("lỗi trong exc :  / "  + err);
+                            });
+                            console.log('end đang chạy lần thứ : ' + i);
+                        }
+                        await driver.findElement(webdriver.By.id('groupsMemberSection_recently_joined')).getAttribute("innerHTML").then(function (profile) {
+                            const cheerio = require('cherio')
+                            const $ = cheerio.load(profile)
+                            var data_id_user = [];
+                            $('._gse[data-name=GroupProfileGridItem]').each(function (i, elem) {
+                                // Range Name
+                                console.log("iteration - ", i);
+                                console.log("name - ", $(this).attr('id'));
+                                data_id_user.push($(this).attr('id'));
+                            });
+                        });
+                        //await driver.quit();
+                    } catch (e) {
+                        console.log("err catch" + e);
+                        await driver.quit();
+                    }
+
+                } catch (e) {
+                    console.log('lỗi : ', e);
+                }
+            })()
+        } catch (e) {
+            console.log("lỗi selenium ngoài cùng!" + e)
+        }
     });
     app.post("/run-service", (req, res, next) => {
         if (!req.isAuthenticated()) {
@@ -314,11 +406,11 @@ module.exports = function (app, passport, obj) {
                     'args': ['--disable-infobars', "--disable-notifications"]
                 };
                 chromeCapabilities.set('chromeOptions', chromeOptions);
-                var driver1 = new webdriver.Builder().forBrowser('chrome').withCapabilities(chromeCapabilities).build();
-                var driver = new webdriver
-                    .Builder()
-                    .withCapabilities(capability)
+                var driver = new webdriver.Builder()
+                    .forBrowser('chrome')
+                    .withCapabilities(chromeCapabilities)
                     .build();
+
                 await driver.get('http://www.facebook.com')
 
 
