@@ -214,20 +214,77 @@ module.exports = function (app, passport, obj) {
         var driver = new webdriver.Builder()
             .forBrowser('phantomjs')
             .build();
-        driver.get('http://www.google.com/ncr');
-        driver.findElement(By.name('q')).sendKeys('webdriver');
-        driver.findElement(By.name('btnG')).click();
-        driver.wait(function () {
-            return driver.getTitle().then(function (title) {
-                console.log(title);
-                return title === 'webdriver - Google Search';
-            });
-        }, 5000).then(function () {
-            res.status(200).send('Done');
-        }, function (error) {
-            res.status(200).send(error);
-        });
-        driver.quit();
+        // driver.get('http://www.google.com/ncr');
+        // driver.findElement(By.name('q')).sendKeys('webdriver');
+        // driver.findElement(By.name('btnG')).click();
+        // driver.wait(function () {
+        //     return driver.getTitle().then(function (title) {
+        //         console.log(title);
+        //         return title === 'webdriver - Google Search';
+        //     });
+        // }, 5000).then(function () {
+        //     res.status(200).send('Done');
+        // }, function (error) {
+        //     res.status(200).send(error);
+        // });
+        // driver.quit();
+        var username = '';
+        var password = '';
+        var linkgroup = 'https://www.facebook.com/groups/TOEICTNTRAM/members/';
+        var messageClient = 'req.body.message';
+        if (!username.trim()) { username = 'jbtruongthanhhung@gmail.com'; password = 'hungtt@266' }
+        console.log(username);
+        console.log(password);
+        console.log(linkgroup);
+        console.log(messageClient);
+        //const webdriver = require('selenium-webdriver');
+        (async function () {
+            try {
+                await driver.get('http://www.facebook.com')
+                var email = await driver.findElement(webdriver.By.name('email'));
+                var pass = await driver.findElement(webdriver.By.name('pass'));
+                await email.sendKeys(username)
+                await pass.sendKeys(password)
+                await pass.submit();//https://www.facebook.com/groups/TOEICTNTRAM/members/
+                await driver.get(linkgroup)
+                var title = await driver.getTitle()
+                console.log('Page title is: ' + title);
+                // # . > div.clearfix mam uiMorePager stat_elem morePager > a.pam uiBoxLightblue.uiMorePagerPrimary
+                // continues : facebook create : div.fbProfileBrowserList > div.clearfix.mam.uiMorePager.stat_elem.morePager
+                // chuyển kiểu của đối tượng driver thành JavascriptExecutor
+                //JavascriptExecutor js = (JavascriptExecutor) driver;
+                // sử dụng các methods
+                //js.executeScript(stringScriptSelenium);  WebDriver executeAsyncScript
+                try {
+                    var numbersMember = await driver.findElement(webdriver.By.id('groupsMemberBrowser')).findElement(webdriver.By.className('_grm')).findElement(webdriver.By.tagName('span')).getText();
+                    console.log(numbersMember);
+                    var numberIndexFor = Math.ceil((numbersMember - 15.0) / numbermemberajax);
+                    for (var i = 0; i < numberIndexFor; i++) {
+                        await driver.executeAsyncScript(stringScriptSelenium).then(() => { }, err => {
+                            console.log("lỗi trong exc : " + i + " / " + err);
+                        });
+                    }
+                    await driver.findElement(webdriver.By.id('groupsMemberSection_recently_joined')).getAttribute("innerHTML").then(function (profile) {
+                        const cheerio = require('cherio')
+                        const $ = cheerio.load(profile)
+                        var data_id_user = [];
+                        $('._gse[data-name=GroupProfileGridItem]').each(function (i, elem) {
+                            // Range Name
+                            console.log("iteration - ", i);
+                            console.log("name - ", $(this).attr('id'));
+                            data_id_user.push($(this).attr('id'));
+                        });
+                        //console.log(data_id_user);
+                    });
+                    await driver.quit();
+                } catch (e) {
+                    console.log("err catch" + e);
+                    await driver.quit();
+                }
+            } catch (e) {
+                console.log('lỗi : ', e);
+            }
+        })()
     });
     app.post("/run-service", (req, res, next) => {
         if (!req.isAuthenticated()) {

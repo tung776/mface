@@ -28,6 +28,14 @@ class WebDriverError extends Error {
 
     /** @override */
     this.name = this.constructor.name;
+
+    /**
+     * A stacktrace reported by the remote webdriver endpoint that initially
+     * reported this error. This property will be an empty string if the remote
+     * end did not provide a stacktrace.
+     * @type {string}
+     */
+    this.remoteStacktrace = '';
   }
 }
 
@@ -44,10 +52,26 @@ class ElementNotSelectableError extends WebDriverError {
 
 
 /**
+ * Indicates a command could not be completed because the target element is
+ * not pointer or keyboard interactable. This will often occur if an element
+ * is present in the DOM, but not rendered (i.e. its CSS style has
+ * "display: none").
+ */
+class ElementNotInteractableError extends WebDriverError {
+  /** @param {string=} opt_error the error message, if any. */
+  constructor(opt_error) {
+    super(opt_error);
+  }
+}
+
+
+/**
  * An element command could not be completed because the element is not visible
  * on the page.
+ *
+ * @deprecated Use {@link ElementNotInteractable} instead.
  */
-class ElementNotVisibleError extends WebDriverError {
+class ElementNotVisibleError extends ElementNotInteractableError {
   /** @param {string=} opt_error the error message, if any. */
   constructor(opt_error) {
     super(opt_error);
@@ -392,6 +416,7 @@ const LEGACY_ERROR_CODE_TO_TYPE = new Map([
 
 const ERROR_CODE_TO_TYPE = new Map([
     ['unknown error', WebDriverError],
+    ['element not interactable', ElementNotInteractableError],
     ['element not selectable', ElementNotSelectableError],
     ['element not visible', ElementNotVisibleError],
     ['invalid argument', InvalidArgumentError],
@@ -486,7 +511,11 @@ function isErrorResponse(data) {
 function throwDecodedError(data) {
   if (isErrorResponse(data)) {
     let ctor = ERROR_CODE_TO_TYPE.get(data.error) || WebDriverError;
-    throw new ctor(data.message);
+    let err = new ctor(data.message);
+    if (typeof data.stacktrace === 'string') {
+      err.remoteStacktrace = data.stacktrace;
+    }
+    throw err;
   }
   throw new WebDriverError('Unknown error: ' + JSON.stringify(data));
 }
@@ -535,6 +564,7 @@ module.exports = {
   ErrorCode: ErrorCode,
 
   WebDriverError: WebDriverError,
+  ElementNotInteractableError: ElementNotInteractableError,
   ElementNotSelectableError: ElementNotSelectableError,
   ElementNotVisibleError: ElementNotVisibleError,
   InvalidArgumentError: InvalidArgumentError,
