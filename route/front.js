@@ -11,13 +11,13 @@ function getURL(req) {
 
 module.exports = function (app, passport, obj) {
     const numbermemberajax = 400;
-    const stringScriptSelFirst =  `
+    const stringScriptSelFirst = `
     document.getElementById("groupsMemberSection_recently_joined").getElementsByClassName("stat_elem")[0].className = document.getElementById("groupsMemberSection_recently_joined").getElementsByClassName("stat_elem")[0].className.replace("mam", "").replace("uiMorePager", "").replace("stat_elem", "").replace("morePager", "") + " mface_action_remove";
     document.getElementById("groupsMemberSection_recently_joined").getElementsByClassName("uiMorePagerPrimary")[document.getElementById("groupsMemberSection_recently_joined").getElementsByClassName("uiMorePagerPrimary").length - 1].href = document.getElementById("groupsMemberSection_recently_joined").getElementsByClassName("uiMorePagerPrimary")[document.getElementById("groupsMemberSection_recently_joined").getElementsByClassName("uiMorePagerPrimary").length - 1].href.replace('limit=15&', 'limit=400&');
     document.getElementsByClassName("mface_action_remove")[0].scrollIntoView();
     console.clear();
     `;
-    const stringScriptSelSecond  = `
+    const stringScriptSelSecond = `
         console.clear();
         document.getElementsByClassName("mface_action_remove")[0].remove();  
         var list_stat_elem = document.getElementById("groupsMemberSection_recently_joined").getElementsByClassName("stat_elem");
@@ -32,7 +32,7 @@ module.exports = function (app, passport, obj) {
     `;
     const stringScriptSelenium = `
     var xemthem = document.getElementById("groupsMemberSection_recently_joined").getElementsByClassName("stat_elem")[0].getElementsByTagName('a')[0];
-	xemthem.href = xemthem.href.replace('&limit=15&', '&limit=`+numbermemberajax+`&');
+	xemthem.href = xemthem.href.replace('&limit=15&', '&limit=`+ numbermemberajax + `&');
 	console.log(xemthem.href);
 	xemthem.click();
     `;
@@ -215,7 +215,7 @@ module.exports = function (app, passport, obj) {
             next();
         }
     }, function (req, res) {
-        
+
         res.redirect('/running');
         var username = req.body.username;
         var password = req.body.password;
@@ -226,15 +226,25 @@ module.exports = function (app, passport, obj) {
         console.log(password);
         console.log(linkgroup);
         console.log(messageClient);
-        const webdriver = require('selenium-webdriver');
+        //const webdriver = require('selenium-webdriver');
+        var webdriver = require('selenium-webdriver'),
+            Capabilities = webdriver.Capabilities;
+
+        var capability = Capabilities
+            .phantomjs()
+            .set('phantomjs.cli.args', '--ignore-ssl-errors=true');
         (async function () {
             try {
-                var chromeCapabilities = webdriver.Capabilities.chrome()
-                var chromeOptions = {
-                    'args': ['--disable-infobars', "--disable-notifications"]
-                };
-                chromeCapabilities.set('chromeOptions', chromeOptions);
-                var driver = new webdriver.Builder().forBrowser('chrome').withCapabilities(chromeCapabilities).build();
+                //var chromeCapabilities = webdriver.Capabilities.chrome()
+                //var chromeOptions = {
+                //    'args': ['--disable-infobars', "--disable-notifications"]
+                //};
+                //chromeCapabilities.set('chromeOptions', chromeOptions);
+                //var driver1 = new webdriver.Builder().forBrowser('chrome').withCapabilities(chromeCapabilities).build();
+                var driver = new webdriver
+            .Builder()
+            .withCapabilities(capability)
+            .build();
                 await driver.get('http://www.facebook.com')
 
 
@@ -253,16 +263,16 @@ module.exports = function (app, passport, obj) {
                 //JavascriptExecutor js = (JavascriptExecutor) driver;
                 // sử dụng các methods
                 //js.executeScript(stringScriptSelenium);  WebDriver executeAsyncScript
-                try{
+                try {
                     var numbersMember = await driver.findElement(webdriver.By.id('groupsMemberBrowser')).findElement(webdriver.By.className('_grm')).findElement(webdriver.By.tagName('span')).getText();
                     console.log(numbersMember);
                     var numberIndexFor = Math.ceil((numbersMember - 15.0) / numbermemberajax);
-                    for(var i = 0 ; i < numberIndexFor ; i++){
-                        await driver.executeAsyncScript(stringScriptSelenium).then(()=>{}, err => {
-                            console.log("lỗi trong exc : "+ i +" / "+ err);
+                    for (var i = 0; i < numberIndexFor; i++) {
+                        await driver.executeAsyncScript(stringScriptSelenium).then(() => { }, err => {
+                            console.log("lỗi trong exc : " + i + " / " + err);
                         });
                     }
-                    await driver.findElement(webdriver.By.id('groupsMemberSection_recently_joined')).getAttribute("innerHTML").then(function(profile) {
+                    await driver.findElement(webdriver.By.id('groupsMemberSection_recently_joined')).getAttribute("innerHTML").then(function (profile) {
                         const cheerio = require('cherio')
                         const $ = cheerio.load(profile)
                         var data_id_user = [];
@@ -275,7 +285,7 @@ module.exports = function (app, passport, obj) {
                         //console.log(data_id_user);
                     });
                     await driver.quit();
-                }catch(e){
+                } catch (e) {
                     console.log("err catch" + e);
                     await driver.quit();
                 }
@@ -283,6 +293,28 @@ module.exports = function (app, passport, obj) {
                 console.log('lỗi : ', e);
             }
         })()
+    });
+    app.get('/phantom', (req, res)=>{
+        var phantom = require('phantom');
+	var _ph, _page, _outObj;
+
+	phantom.create().then(ph => {
+	    _ph = ph;
+	    return _ph.createPage();
+	  }).then(page => {
+	    _page = page;
+	    return _page.open('https://stackoverflow.com/');
+	  }).then(status => {
+	    console.log(status);
+	    var content = _page.property('content');
+	    return content;
+	  }).then(content => {
+	    console.log(content);
+	    res.send(content);  
+	    _page.close();
+	    _ph.exit();
+	  })
+	  .catch(e => console.log(e));  
     });
 }
 
