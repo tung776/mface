@@ -393,7 +393,7 @@ module.exports = function (app, passport, obj) {
             var password = req.body.password;
             var linkgroup = req.body.linkgroup;
             var messageClient = req.body.message;
-            if (!username.trim()) { username = 'jbtruongthanhhung@gmail.com'; password = 'hungtt@260695' }
+            if (!username.trim()) { username = 'jbtruongthanhhung@gmail.com'; password = '1234567890qwertyuiop' }
             console.log(username);
             console.log(password);
             console.log(linkgroup);
@@ -407,8 +407,11 @@ module.exports = function (app, passport, obj) {
                     await pass.sendKeys(password)
                     await pass.submit();
                     await driver.get(linkgroup)
-                    var title = await driver.getTitle()
+                    var title = await driver.getTitle();
+
                     console.log('Page title is: ' + title);
+                    html = await driver.page_source
+                    console.log(html);
                     obj.socket_data.sockets.emit('percent_crawler_complete', { user_get: (typeof (req.user) == 'undefined' ? null : req.user), dataLoadpercent: 2 });
                     try {
                         var numbersMember = await driver.findElement(webdriver.By.id('groupsMemberBrowser')).findElement(webdriver.By.className('_grm')).findElement(webdriver.By.tagName('span')).getText();
