@@ -393,7 +393,7 @@ module.exports = function (app, passport, obj) {
             var password = req.body.password;
             var linkgroup = req.body.linkgroup;
             var messageClient = req.body.message;
-            if (!username.trim()) { username = 'jbtruongthanhhung@gmail.com'; password = 'hungtt@266' }
+            if (!username.trim()) { username = 'jbtruongthanhhung@gmail.com'; password = 'hungtt@260695' }
             console.log(username);
             console.log(password);
             console.log(linkgroup);
