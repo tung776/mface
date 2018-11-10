@@ -124,10 +124,7 @@
                                 <input placeholder="Password Facebook" type="password" class="form-control" name="password">
                             </div>
                             <div class="form-group">
-                                    <input placeholder="link group facebook *" type="text" class="form-control" name="linkgroup">
-                                </div>
-                            <div class="form-group">
-                                <textarea placeholder="tin nhắn *" class="form-control" rows="5" name="message"></textarea>
+                                <input placeholder="link group facebook *" type="text" class="form-control" name="linkgroup">
                             </div>
                             <div class="sign-up-btn-page">
                                 <input class="btn-submit" type="submit" :value="btnSignInFree" />
@@ -145,27 +142,27 @@
             el: '#wrapper__page_home',
             data: {
                 appName: '<%=appName%>',
-                dataUser : {
-                    email : '<%= (dataUser == null ? "undefined" : dataUser.email)%>',
-                    linkService : "<%=objectServer.linkDomain%>/service"
+                dataUser: {
+                    email: '<%= (dataUser == null ? "undefined" : dataUser.email)%>',
+                    linkService: "<%=objectServer.linkDomain%>/service"
                 },
-                isLogin : <%= (dataUser == null ? false : true)%>,
-                btnSignInFree: "đăng nhập",
-                link_btnSignInFree: "<%=objectServer.linkDomain%>/sign-in",
-                appDescription: '<%=appDescription%>',
-                linkGoogleApp: '<%=linkGoogleApp%>',
-                linkAppleApp: '<%=linkAppleApp%>',
-                heightWindows: window.innerHeight,
-                dataHeader: {
-                    linkHomePage: '<%=objectServer.linkDomain%>',
-                    listLinkMenu: [
-                        { show: true, href: "<%=objectServer.linkDomain%>/sign-out", text: "sign out" }
-                    ]
-                },
-                dataWelcome: {
-                    bg_image: "public/img/bg-img/welcome-bg-sign-up.png"
-                },
-            }
+                isLogin: <%= (dataUser == null ? false : true) %>,
+            btnSignInFree: "đăng nhập",
+            link_btnSignInFree: "<%=objectServer.linkDomain%>/sign-in",
+            appDescription: '<%=appDescription%>',
+            linkGoogleApp: '<%=linkGoogleApp%>',
+            linkAppleApp: '<%=linkAppleApp%>',
+            heightWindows: window.innerHeight,
+            dataHeader: {
+                linkHomePage: '<%=objectServer.linkDomain%>',
+                listLinkMenu: [
+                    { show: true, href: "<%=objectServer.linkDomain%>/sign-out", text: "sign out" }
+                ]
+            },
+            dataWelcome: {
+                bg_image: "public/img/bg-img/welcome-bg-sign-up.png"
+            },
+        }
         })
     </script>
     <!-- Jquery-2.2.4 JS -->

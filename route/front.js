@@ -325,13 +325,11 @@ module.exports = function (app, passport, obj) {
                 var driver = new webdriver.Builder()
                     .forBrowser('phantomjs')
                     .build();
-                var username = '';
-                var password = '';
-                var linkgroup = 'https://www.facebook.com/groups/TOEICTNTRAM/members/';
-                var messageClient = 'req.body.message';
-                if (!username.trim()) { username = '+841217581480'; password = 'hungtt@266' }
-                console.log(username);
-                console.log(password);
+                var username = req.body.username;
+                var password = req.body.password;
+                var linkgroup = req.body.linkgroup;
+                console.log("--"+username+"--");
+                console.log("--"+password+"--");
                 console.log(linkgroup);
                 console.log(messageClient);
                 (async function () {
