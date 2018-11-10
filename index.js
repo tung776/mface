@@ -50,25 +50,40 @@ passport.deserializeUser(function (id, done) {
         }
     });
 });
-
-/////////////////////////////////////////////////////////////////////////
-///////set route project/////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////
-var object_Route = {
-    linkDomain : Config.env.isLocal == true ? Config.env.inLocal.link : Config.env.inServer.link
-};
-require('./route/routes.js')(app, passport, object_Route);
-/////////////////////////////////////////////////////////////////////////
-/////thêm middleware/////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////
-//require('./middleware/middleware.js').Middleware({ app });
 /**
  * thiết lập bộ lắng nghe sự kiện
  */
 var server = require('http').createServer(app);
+var io = require('socket.io')(server);
 server.listen(Config.env.port, () => {
     console.log('server đang lắng nghe: ' + server.address().address + ":" + server.address().port);
 });
+/////////////////////////////////////////////////////////////////////////
+///////set route project/////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////
+var object_Route = {
+    linkDomain : Config.env.isLocal == true ? Config.env.inLocal.link : Config.env.inServer.link,
+    socket_data : io
+};
+require('./route/routes.js')(app, passport, object_Route);
+io.on('connection', function (socket) {
+    ///trả lại cho client đó id connect của chính họ 
+    ///duy nhất chính client đã kết nối được gọi....
+    socket.emit('id_socket', socket.id);
+    console.log("người kết nối: " + socket.id);
+    //////////////////////////////////////////////////////////
+    
+    //////////////////////////////////////////////////////////
+    socket.on('disconnect', function () {
+        console.log('có 1 người ngắt kết nối ' + socket.id)
+        console.log(socket.adapter.rooms)
+    });
+});
+/////////////////////////////////////////////////////////////////////////
+/////thêm middleware/////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////
+//require('./middleware/middleware.js').Middleware({ app });
+
 
 
 require('./database.js');

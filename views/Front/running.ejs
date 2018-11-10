@@ -17,6 +17,7 @@
     <link href="public/style.css" rel="stylesheet">
     <!-- Responsive CSS -->
     <link href="public/css/responsive.css" rel="stylesheet">
+    <script type="text/javascript" src="<%=assetURL.currentUrl%>/socket.io/socket.io.js"></script>
     <!-- vue JS -->
     <style>
         input{
@@ -56,6 +57,57 @@
         }
         .wellcome_area a{
             color: #111
+        }
+        .wrapper--page-list-user{
+            width: 100%;
+        }
+        .wrapper--page-list-user .list{
+            clear: both;
+        }
+        .item-user{
+            display: inline-block;
+            width: 33.33%;
+            min-width: 300px;
+            float: left;
+        }
+        .user_img{
+            display: inline-block;
+            width: 72px;
+            height: 72px;
+            vertical-align: middle;
+            border-radius: 50%;
+            overflow: hidden;
+        }
+        .user_infor{
+            display: inline-block;
+            padding-left: 20px;
+            vertical-align: middle;
+        }
+        .user_infor h4 a{
+            color: #e8bbc3;
+            font-size: 18px;
+            font-weight: bold;
+            line-height: 18px;
+        }
+        .user_infor h4{
+            max-width: 250px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            color: #e8bbc3;
+        }
+        .user_infor p{
+            color: #fff;
+            font-size: 12px;
+            line-height: 16px;
+            max-width: 250px;
+        }
+        .disBlock{
+            display: block
+        }
+        .progress-bar{
+            background-color: #2bfd92;
+            color : black
         }
     </style>
 </head>
@@ -112,8 +164,36 @@
         <section class="wellcome_area clearfix" :style="{'background' : 'url('+dataWelcome.bg_image+')', 'height': 'inherit', 'min-height':heightWindows+'px'}">
             <div class="container">
                 <div class="row">
-                    <div class="col-sm-6 col-sm-push-3 fixCenter">
-                        running..
+                    <div class="wrapper--page-list-user mgT140px">
+                        <div class="col-sm-6 col-sm-push-3 fixCenter">
+                            running..
+                            <div class="wrapper-progess">
+                                <div class="progress">
+                                    <div class="progress-bar" role="progressbar" :aria-valuenow="dataUserLoad" aria-valuemin="0"
+                                        aria-valuemax="100" :style="'width:'+dataUserLoad+'%'">
+                                        <span v-if="dataUserLoad > 20">{{dataUserLoad}}% Complete</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="user">
+                            <div class="list">
+                                <div class="item-user" v-for="item in dataUserFacebook">
+                                    <div class="user_img">
+                                        <img :src="'https://graph.facebook.com/'+item.id+'/picture?type=normal'" alt="" />
+                                    </div>
+                                    <div class="user_infor">
+                                        <h4>
+                                            <a :href="'https://www.facebook.com/profile.php?id='+item.id">{{item.name}}</a>
+                                        </h4>
+                                        <p> 
+                                            <span class="disBlock">{{item.join}}</span>
+                                            {{item.about}}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -122,15 +202,16 @@
     </div>
     <script crossorigin src="public/vuejs/vue.js"></script>
     <script>
+        const baseUrl = '<%=assetURL.currentUrl%>';
         var app = new Vue({
             el: '#wrapper__page_home',
             data: {
                 appName: '<%=appName%>',
-                dataUser : {
-                    email : '<%= (dataUser == null ? "undefined" : dataUser.email)%>',
-                    linkService : "<%=objectServer.linkDomain%>/service"
+                dataUser: {
+                    email: '<%= (dataUser == null ? "undefined" : dataUser.email)%>',
+                    linkService: "<%=objectServer.linkDomain%>/service"
                 },
-                isLogin : <%= (dataUser == null ? false : true)%>,
+                isLogin: <%= (dataUser == null ? false : true) %>,
                 btnSignInFree: "đăng nhập",
                 link_btnSignInFree: "<%=objectServer.linkDomain%>/sign-in",
                 appDescription: '<%=appDescription%>',
@@ -146,6 +227,14 @@
                 dataWelcome: {
                     bg_image: "public/img/bg-img/welcome-bg-sign-up.png"
                 },
+                dataUserFacebook: [
+                    {
+                        id: 100008412333905,
+                        name: 'trương rhanh hùng',
+                        about: 'sdfgh fnaf sfnsajsan asdnsadjasn asdnsadjsa sajdnja '
+                    }
+                ],
+                dataUserLoad : 0
             }
         })
     </script>
@@ -163,7 +252,27 @@
 
     <!-- Active JS -->
     <script src="public/js/active.js"></script>
+    <script>
+        const socket = io.connect(baseUrl);
+        // jQuery Document
+        $(document).ready(function () {
+            ///đón thông tin id socket
 
+            socket.on('id_socket', function (data) {
+                console.log(data);
+
+            });
+            socket.on('list_user__in_group', function (data) {
+                console.log(data);
+                app.dataUserFacebook = data.data;
+            });//
+            //list_user__in_group
+            socket.on('percent_crawler_complete', function (data) {
+                console.log(data.dataLoadpercent)
+                app.dataUserLoad = data.dataLoadpercent;
+            });
+        });
+    </script>
 </body>
 
 </html>
