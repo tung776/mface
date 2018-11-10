@@ -310,7 +310,6 @@ module.exports = function (app, passport, obj) {
     }, function (req, res) {
         try {
             try {
-
                 res.redirect('/running');
                 var webdriver = require('selenium-webdriver');
                 var driver = new webdriver.Builder()
@@ -355,8 +354,6 @@ module.exports = function (app, passport, obj) {
                                     const $ = cheerio.load(profile)
                                     var data_id_user = [];
                                     $('._gse[data-name=GroupProfileGridItem]').each(function (i, elem) {
-    
-                                        //http://graph.facebook.com/67563683055/picture?type=
                                         var objuser = {
                                             id: $(this).attr('id').replace(/[^0-9]+/g, ""),
                                             name: $(this).find('.uiProfileBlockContent a').text(),
@@ -370,23 +367,33 @@ module.exports = function (app, passport, obj) {
                                     obj.socket_data.sockets.emit('list_user__in_group', { user_get: typeof (req.user) == 'undefined' ? null : req.user, data: data_id_user });
                                 });
                             await driver.quit();
+                            obj.socket_data.sockets.emit('state_run', { user_get: typeof (req.user) == 'undefined' ? null : req.user, state : true });
+                            return true;
                         } catch (e) {
                             console.log("err catch" + e);
                             await driver.quit();
+                            obj.socket_data.sockets.emit('state_run', { user_get: typeof (req.user) == 'undefined' ? null : req.user, state : false });
+                            return false;
                         }
                     } catch (e) {
                         console.log('lỗi : ', e);
+                        obj.socket_data.sockets.emit('state_run', { user_get: typeof (req.user) == 'undefined' ? null : req.user, state : false });
+                        return false;
                     }
                 })()
     
                 ///////////////////////////////////////////////
             } catch (e) {
-                console.log("lỗi selenium ngoài cùng!" + e)
+                console.log("lỗi selenium ngoài cùng!" + e);
+                obj.socket_data.sockets.emit('state_run', { user_get: typeof (req.user) == 'undefined' ? null : req.user, state : false });
+                return false;
             }
 
             ///////////////////////////////////////////////
         } catch (e) {
-            console.log("lỗi selenium ngoài cùng!" + e)
+            console.log("lỗi selenium ngoài cùng!" + e);
+            obj.socket_data.sockets.emit('state_run', { user_get: typeof (req.user) == 'undefined' ? null : req.user, state : false });
+            return false;
         }
     });
     app.get("/selenium/chrome", function (req, res) {

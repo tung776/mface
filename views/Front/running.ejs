@@ -270,6 +270,10 @@
             socket.on('percent_crawler_complete', function (data) {
                 console.log(data.dataLoadpercent)
                 app.dataUserLoad = data.dataLoadpercent;
+            });//state_run
+            socket.on('state_run', function (data) {
+                console.log(data.state)
+                app.dataUserLoad = data.state;
             });
         });
     </script>
