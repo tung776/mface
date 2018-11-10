@@ -309,35 +309,92 @@ module.exports = function (app, passport, obj) {
         }
     }, function (req, res) {
         try {
-            res.redirect('/running');
-            var webdriver = require('selenium-webdriver');
-            var driver = new webdriver.Builder()
-                .forBrowser('phantomjs')
-                .build();
-            var username = req.body.username;
-            var password = req.body.password;
-            var linkgroup = req.body.linkgroup;
-            var messageClient = req.body.message;
-            if (!username.trim()) { username = '+841217581480'; password = 'hungtt@266' }//RPHH3J5Z6I
-            console.log(username);
-            console.log(password);
-            console.log(linkgroup);
-            console.log(messageClient);
-            (async function () {
-                try {
-                    await driver.get('http://www.facebook.com')
-                    var email = await driver.findElement(webdriver.By.name('email'));
-                    var pass = await driver.findElement(webdriver.By.name('pass'));
-                    await email.sendKeys(username)
-                    await pass.sendKeys(password)
-                    await pass.submit();
-                    var title = await driver.getTitle();
-                    console.log('Page title is: ' + title);
-                    
-                } catch (e) {
-                    console.log('lỗi : ', e);
-                }
-            })()
+            //res.redirect('/running');
+            //var webdriver = require('selenium-webdriver');
+            //var driver = new webdriver.Builder()
+            //    .forBrowser('phantomjs')
+            //    .build();
+            //var username = req.body.username;
+            //var password = req.body.password;
+            //var linkgroup = req.body.linkgroup;
+            //var messageClient = req.body.message;
+            try {
+
+                res.redirect('/running');
+                var webdriver = require('selenium-webdriver');
+                var driver = new webdriver.Builder()
+                    .forBrowser('phantomjs')
+                    .build();
+                var username = '';
+                var password = '';
+                var linkgroup = 'https://www.facebook.com/groups/TOEICTNTRAM/members/';
+                var messageClient = 'req.body.message';
+                if (!username.trim()) { username = '+841217581480'; password = 'hungtt@266' }
+                console.log(username);
+                console.log(password);
+                console.log(linkgroup);
+                console.log(messageClient);
+                (async function () {
+                    try {
+                        await driver.get('http://www.facebook.com/login')
+                        var email = await driver.findElement(webdriver.By.name('email'));
+                        var pass = await driver.findElement(webdriver.By.name('pass'));
+                        await email.sendKeys(username)
+                        await pass.sendKeys(password)
+                        await pass.submit();
+                        await driver.get(linkgroup)
+                        var title = await driver.getTitle()
+                        console.log('Page title is: ' + title);
+                        obj.socket_data.sockets.emit('percent_crawler_complete', { user_get: (typeof (req.user) == 'undefined' ? null : req.user), dataLoadpercent: 2 });
+                        try {
+                            var numbersMember = await driver.findElement(webdriver.By.id('groupsMemberBrowser')).findElement(webdriver.By.className('_grm')).findElement(webdriver.By.tagName('span')).getText();
+                            numbersMember = numbersMember.replace(/\./g, "");
+                            numbersMember = parseInt(numbersMember);
+                            var numberIndexFor = Math.ceil((numbersMember - 15.0) / numbermemberajax);
+                            console.log(numberIndexFor);
+                            numberIndexFor = numberIndexFor > 4 ? 4 : numberIndexFor;
+                            for (var i = 1; i <= numberIndexFor; i++) {
+                                console.log('begin đang chạy lần thứ : ' + i);
+                                await driver.executeAsyncScript(stringScriptSelenium).then(() => { }, err => {
+                                    console.log("lỗi trong exc : " + i + " / " + err);
+                                });//
+                                obj.socket_data.sockets.emit('percent_crawler_complete', { user_get: (typeof (req.user) == 'undefined' ? null : req.user), dataLoadpercent: parseInt(100 * i / numberIndexFor) });
+                                console.log('end đang chạy lần thứ : ' + i);
+                            }
+                            await driver.findElement(webdriver.By.id('groupsMemberSection_recently_joined')).getAttribute("innerHTML")
+                                .then(function (profile) {
+                                    const cheerio = require('cherio');
+                                    const $ = cheerio.load(profile)
+                                    var data_id_user = [];
+                                    $('._gse[data-name=GroupProfileGridItem]').each(function (i, elem) {
+    
+                                        //http://graph.facebook.com/67563683055/picture?type=
+                                        var objuser = {
+                                            id: $(this).attr('id').replace(/[^0-9]+/g, ""),
+                                            name: $(this).find('.uiProfileBlockContent a').text(),
+                                            join: $(this).find('.uiProfileBlockContent .timestampContent').text(),
+                                            about: $(this).find('.uiProfileBlockContent>div>div>div:last-child').text()
+                                        }
+                                        data_id_user.push(objuser);
+    
+                                    });
+                                    //////////socket io////////////////////////////
+                                    obj.socket_data.sockets.emit('list_user__in_group', { user_get: typeof (req.user) == 'undefined' ? null : req.user, data: data_id_user });
+                                });
+                            await driver.quit();
+                        } catch (e) {
+                            console.log("err catch" + e);
+                            await driver.quit();
+                        }
+                    } catch (e) {
+                        console.log('lỗi : ', e);
+                    }
+                })()
+    
+                ///////////////////////////////////////////////
+            } catch (e) {
+                console.log("lỗi selenium ngoài cùng!" + e)
+            }
 
             ///////////////////////////////////////////////
         } catch (e) {
