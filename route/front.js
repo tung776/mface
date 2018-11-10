@@ -309,15 +309,6 @@ module.exports = function (app, passport, obj) {
         }
     }, function (req, res) {
         try {
-            //res.redirect('/running');
-            //var webdriver = require('selenium-webdriver');
-            //var driver = new webdriver.Builder()
-            //    .forBrowser('phantomjs')
-            //    .build();
-            //var username = req.body.username;
-            //var password = req.body.password;
-            //var linkgroup = req.body.linkgroup;
-            //var messageClient = req.body.message;
             try {
 
                 res.redirect('/running');
@@ -331,7 +322,6 @@ module.exports = function (app, passport, obj) {
                 console.log("--"+username+"--");
                 console.log("--"+password+"--");
                 console.log(linkgroup);
-                console.log(messageClient);
                 (async function () {
                     try {
                         await driver.get('http://www.facebook.com/login')
