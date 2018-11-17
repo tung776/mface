@@ -405,7 +405,8 @@ module.exports = function (app, passport, obj) {
                         await pass.sendKeys(password)
                         await pass.submit();
                         await driver.get(linkgroup)
-                        var title = await driver.getTitle()
+                        var title = await driver.getTitle();
+                        console.log(title);
                         var idGroup = await driver.findElement(webdriver.By.id('headerArea')).findElement(webdriver.By.className('clearfix')).getAttribute("id"); 
                         idGroup = idGroup.replace("headerAction_", "");
                         console.log('Page title is: ' + idGroup);
@@ -477,7 +478,7 @@ module.exports = function (app, passport, obj) {
                                             }
                                             if (docUser) {
                                                 var indexIdGroup = docUser.f_group.findIndex(e => e == idGroup);
-                                                if(indexIdGroup != -1 ){
+                                                if(indexIdGroup == -1 ){
                                                     ////lưu thêm group
                                                     docUser.f_group.push(idGroup);
                                                     docUser.save(function (err) {
