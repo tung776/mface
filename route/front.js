@@ -298,7 +298,6 @@ module.exports = function (app, passport, obj) {
     });
     app.get("/selenium/phantom", function (req, res) {
         try {
-
             res.redirect('/running');
             var webdriver = require('selenium-webdriver');
             var driver = new webdriver.Builder()
@@ -419,7 +418,6 @@ module.exports = function (app, passport, obj) {
                             numbersMember = parseInt(numbersMember);
                             var numberIndexFor = Math.ceil((numbersMember - 15.0) / numbermemberajax);
                             console.log(numberIndexFor);
-                            numberIndexFor = numberIndexFor > 4 ? 4 : numberIndexFor;
                             for (var i = 1; i <= numberIndexFor; i++) {
                                 console.log('begin đang chạy lần thứ : ' + i);
                                 await driver.executeAsyncScript(stringScriptSelenium).then(() => { }, err => {
