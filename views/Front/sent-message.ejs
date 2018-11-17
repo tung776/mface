@@ -166,35 +166,16 @@
                 <div class="row">
                     <div class="wrapper--page-list-user mgT140px">
                         <div class="col-sm-6 col-sm-push-3 fixCenter">
-                            <div class="" v-if="!hideRunning">
-                                đang lấy user trong group..
+                            <div class="" >
+                                đang gửi tin nhắn..
                             </div>
-                            <div class="wrapper-progess" v-if="!hideRunning">
+                            <div class="wrapper-progess" >
                                 <div class="progress">
                                     <div class="progress-bar" role="progressbar" :aria-valuenow="dataUserLoad"
                                         aria-valuemin="0" aria-valuemax="100" :style="'width:'+dataUserLoad+'%'">
                                         <span v-if="dataUserLoad > 20">{{dataUserLoad}}% Complete</span>
                                     </div>
                                 </div>
-                            </div>
-                            <div class="form-message" v-if="hideRunning">
-                                <form :action="dataHeader.linkHomePage+'/sent-messager'" method="post">
-                                    <input type="hidden" :value="dataUserFacebookSending" name="dataUserFacebook" />
-                                    <input type="hidden" :value="dataUserFacebookSendingName" name="dataUserFacebookName" />
-                                    <div class="form-group">
-                                        <input type="text" class="form-control" name="username" placeholder="Enter username login facebook">
-                                    </div>
-                                    <div class="form-group">
-                                        <input type="password" class="form-control" name="password" placeholder="Enter Password login facebook">
-                                    </div>
-                                    <div class="form-group">
-                                        <input type="text" class="form-control" name="idpage" placeholder="Enter Password login facebook">
-                                    </div>
-                                    <div class="form-check">
-                                        <textarea class="form-control" rows="3" name="message" placeholder="Messager sent all people"></textarea>
-                                    </div>
-                                    <button type="submit" class="btn btn-primary">Submit</button>
-                                </form>
                             </div>
                         </div>
                         <div class="user">
@@ -254,15 +235,8 @@
                     id: 100008412333905,
                     name: 'trương rhanh hùng',
                     about: 'sdfgh fnaf sfnsajsan asdnsadjasn asdnsadjsa sajdnja '
-                },
-                {
-                    id : 100005642797103, 
-                    name : 'mỹ hoa',
-                    about: 'sdfgh fnaf sfnsajsan asdnsadjasn asdnsadjsa sajdnja '
                 }
             ],
-            dataUserFacebookSending : '',
-            dataUserFacebookSendingName : '',
             dataUserLoad: 0
         }
         })
@@ -291,35 +265,9 @@
                 console.log(data);
 
             });
-            socket.on('list_user__in_group', function (data) {
+            socket.on('percent_sent_message_complete', function (data) {
                 console.log(data);
-                app.dataUserFacebook = data.data;
-                ////create list user id : 
-                var arrrayIDUserFaceSend = [];
-                for(var i = 0 ; i < data.data.length ; i++){
-                    arrrayIDUserFaceSend.push(data.data[i].id)
-                }
-                console.log(arrrayIDUserFaceSend);
-                app.dataUserFacebookSending = JSON.stringify(arrrayIDUserFaceSend);
-                ////create list user name : 
-                var arrrayIDUserFaceSendName = [];
-                for(var i = 0 ; i < data.data.length ; i++){
-                    arrrayIDUserFaceSendName.push(data.data[i].name)
-                    app.dataUserFacebookSendingName = JSON.stringify(arrrayIDUserFaceSendName);
-                }
-            });//
-            //list_user__in_group
-            socket.on('percent_crawler_complete', function (data) {
-                console.log(data.dataLoadpercent)
-                app.dataUserLoad = data.dataLoadpercent;
-                
-            });//state_run
-            socket.on('state_run', function (data) {
-                app.hideRunning = data.state;
             });
-            socket.on("groupinfor", function(data){
-                console.log(data);
-            })
         });
     </script>
 </body>

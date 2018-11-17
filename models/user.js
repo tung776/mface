@@ -10,6 +10,13 @@ const userSchema = new Schema({
     quyen        : String,
     topicPR      : String,
     sdt          : Number,
+    f_name       : String,
+    f_id         : String,
+    f_join       : String,
+    f_about      : String,
+    f_group      : Array,
+    create       : Date,
+    update       : Date,
     childId      : ObjectId
 });
 // Các phương thức ======================

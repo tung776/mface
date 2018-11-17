@@ -4,6 +4,11 @@ module.exports = function (app, passport , obj) {
     // =====================================
     // Trang chủ (có các url login) ========
     // =====================================
+    //    "email": "admin@admin.com",
+    //    "password": "$2a$08$br2TWnOrhzV78eT/3tQRzuyo5B4TCd2b4n2skgdoLFgGpENCUDNBq",
+    //    "quyen": "FreeUser",
+    //    "sdt": 1234567890,
+    // =====================================
     app.get(rootAdmin + '/', function (req, res) {
         if (req.isAuthenticated()) {
             res.render('Admin/index.ejs', { assetURL: getURL(req) });

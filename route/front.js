@@ -202,6 +202,81 @@ module.exports = function (app, passport, obj) {
         }
         return res.render('Front/service.ejs', data);
     });
+    app.get('/sending', (req, res, next) => {
+        if (!req.isAuthenticated()) {
+            return res.redirect('/sign-in');
+        } else {
+            next();
+        }
+    }, (req, res) => {
+        var data = {
+            assetURL: getURL(req),
+            objectServer: obj,
+            appTitle: "home page -- " + Config.app.name,
+            appName: Config.app.name,
+            appDescription: Config.app.description,
+            linkGoogleApp: Config.app.linkGoogleApp,
+            linkAppleApp: Config.app.linkAppleApp,
+            dataUser: typeof (req.user) == 'undefined' ? null : req.user,
+        }
+        return res.render('Front/sent-message.ejs', data);
+    });
+    
+    
+    app.get("/test-save", function (req, res) {
+        var Group = require("./../models/group");
+        var newGroup = new Group();
+        newGroup.name = req.body.groupName;
+        newGroup.link = req.body.groupLink;
+        newGroup.id = req.body.groupId;
+        newGroup.save(err=>{
+            if (err) return handleError(err);
+        });
+        res.send("hùng thực hiện xong");
+    });
+    
+    app.post('/sent-messager', (req, res, next) => {
+        if (!req.isAuthenticated()) {
+            return res.redirect('/sign-in');
+        } else {
+            next();
+        }
+    }, (req, res) => {
+        res.redirect('/sending');
+        const login = require("facebook-chat-api");
+        // Create simple echo bot
+        login({ email: req.body.username, password: req.body.password }, (err, api) => {
+            if (err) {
+                obj.socket_data.sockets.emit('percent_sent_message_complete', { user_get: (typeof (req.user) == 'undefined' ? null : req.user), dataLoadMessagePercent: 100, error : true });
+                return console.error(err);
+            }
+            obj.socket_data.sockets.emit('percent_sent_message_complete', { user_get: (typeof (req.user) == 'undefined' ? null : req.user), dataLoadMessagePercent: 2 });
+            console.log("data id : " + req.body.dataUserFacebook)
+            var dataUserFacebook = JSON.parse(req.body.dataUserFacebook);
+            console.log(dataUserFacebook);
+            var variableForDataUser = dataUserFacebook.length;
+            
+            //cứ 2s lôi db ra mà chạy
+            var indexCodeTimeout = 10;
+            function myFunction() {
+                console.log('begin run send message at '+ indexCodeTimeout);
+                api.sendMessage(req.body.message, dataUserFacebook[variableForDataUser - indexCodeTimeout], (err) => {
+                    console.log("send done : "  );
+                    console.log(err);
+                    obj.socket_data.sockets.emit('percent_sent_message_complete', { user_get: (typeof (req.user) == 'undefined' ? null : req.user), dataLoadMessagePercent: 5 });
+                });
+                if ((variableForDataUser - indexCodeTimeout) % 40 == 0) {
+                    obj.socket_data.sockets.emit('percent_sent_message_complete', { user_get: (typeof (req.user) == 'undefined' ? null : req.user), dataLoadMessagePercent: parseInt(100 * (variableForDataUser - indexCodeTimeout) / variableForDataUser) });
+                }
+                indexCodeTimeout--;
+                if (indexCodeTimeout > 0) {
+                    setTimeout(myFunction, (Math.floor(Math.random() * 10)%5)*1000 + 5000);
+                }
+            }
+            myFunction(indexCodeTimeout , 2000);
+            obj.socket_data.sockets.emit('percent_sent_message_complete', { user_get: (typeof (req.user) == 'undefined' ? null : req.user), dataLoadMessagePercent: 100 });
+        });
+    });
     app.get('/running', (req, res, next) => {
         if (!req.isAuthenticated()) {
             return res.redirect('/sign-in');
@@ -300,7 +375,7 @@ module.exports = function (app, passport, obj) {
             console.log("lỗi selenium ngoài cùng!" + e)
         }
     });
-    
+
     app.post("/run-service", (req, res, next) => {
         if (!req.isAuthenticated()) {
             res.redirect('/sign-in');
@@ -318,8 +393,8 @@ module.exports = function (app, passport, obj) {
                 var username = req.body.username;
                 var password = req.body.password;
                 var linkgroup = req.body.linkgroup;
-                console.log("--"+username+"--");
-                console.log("--"+password+"--");
+                console.log("--" + username + "--");
+                console.log("--" + password + "--");
                 console.log(linkgroup);
                 (async function () {
                     try {
@@ -331,7 +406,11 @@ module.exports = function (app, passport, obj) {
                         await pass.submit();
                         await driver.get(linkgroup)
                         var title = await driver.getTitle()
-                        console.log('Page title is: ' + title);
+                        var idGroup = await driver.findElement(webdriver.By.id('headerArea')).findElement(webdriver.By.className('clearfix')).getAttribute("id"); 
+                        idGroup = idGroup.replace("headerAction_", "");
+                        console.log('Page title is: ' + idGroup);
+
+                        obj.socket_data.sockets.emit('groupinfor', { user_get: (typeof (req.user) == 'undefined' ? null : req.user), group : { name : title, link : linkgroup , id :  idGroup} });
                         obj.socket_data.sockets.emit('percent_crawler_complete', { user_get: (typeof (req.user) == 'undefined' ? null : req.user), dataLoadpercent: 2 });
                         try {
                             var numbersMember = await driver.findElement(webdriver.By.id('groupsMemberBrowser')).findElement(webdriver.By.className('_grm')).findElement(webdriver.By.tagName('span')).getText();
@@ -361,38 +440,93 @@ module.exports = function (app, passport, obj) {
                                             about: $(this).find('.uiProfileBlockContent>div>div>div:last-child').text()
                                         }
                                         data_id_user.push(objuser);
-    
                                     });
+
                                     //////////socket io////////////////////////////
                                     obj.socket_data.sockets.emit('list_user__in_group', { user_get: typeof (req.user) == 'undefined' ? null : req.user, data: data_id_user });
+                                    var Group = require('./../models/group.js');
+                                    Group.findOne({'fg_id' : idGroup }, (err, docGroup)=>{
+                                        if(err){
+                                            console.log("find group có lỗi : " + err);
+                                        }
+                                        if(!docGroup){
+                                            ////thêm group vào 
+                                            var new_group = new Group();
+                                            new_group.fg_id = idGroup;
+                                            new_group.fg_link = linkgroup;
+                                            new_group.fg_name = title;
+                                            new_group.save(function (err) {
+                                                if (err) {
+                                                    console.log("có lỗi save group : " +new_group.fg_id + " / "+ err);
+                                                    return handleError(err)
+                                                };
+                                            });
+                                        }
+                                    });
+                                    var User = require('./../models/user.js');
+                                    data_id_user.forEach(e => {
+                                        var tuser = new User();
+                                        tuser.f_name = e.name;
+                                        tuser.f_id = e.id;
+                                        tuser.f_join = e.join;
+                                        tuser.f_about = e.about;
+                                        tuser.f_group = [idGroup];
+                                        User.findOne({ 'f_id': e.id }, function (err, docUser) {
+                                            if (err){
+                                                console.log("có lỗi khi check id facebook đã tồn tại trong hệ thống")
+                                            }
+                                            if (docUser) {
+                                                var indexIdGroup = docUser.f_group.findIndex(e => e == idGroup);
+                                                if(indexIdGroup != -1 ){
+                                                    ////lưu thêm group
+                                                    docUser.f_group.push(idGroup);
+                                                    docUser.save(function (err) {
+                                                        if (err) {
+                                                            console.log("có lỗi save user : " +e.id + " / "+ err);
+                                                            return handleError(err)
+                                                        };
+                                                    });
+                                                }else {
+                                                    console.log("user "+ docUser.id + " đã tồn tại trong hệ thống");
+                                                }
+                                            } else {
+                                                tuser.save(function (err) {
+                                                    if (err) {
+                                                        console.log("có lỗi save user : " +e.id + " / "+ err);
+                                                        return handleError(err)
+                                                    };
+                                                });
+                                            }
+                                        });
+                                    });
                                 });
                             await driver.quit();
-                            obj.socket_data.sockets.emit('state_run', { user_get: typeof (req.user) == 'undefined' ? null : req.user, state : true });
+                            obj.socket_data.sockets.emit('state_run', { user_get: typeof (req.user) == 'undefined' ? null : req.user, state: true });
                             return true;
                         } catch (e) {
                             console.log("err catch" + e);
                             await driver.quit();
-                            obj.socket_data.sockets.emit('state_run', { user_get: typeof (req.user) == 'undefined' ? null : req.user, state : false });
+                            obj.socket_data.sockets.emit('state_run', { user_get: typeof (req.user) == 'undefined' ? null : req.user, state: false });
                             return false;
                         }
                     } catch (e) {
                         console.log('lỗi : ', e);
-                        obj.socket_data.sockets.emit('state_run', { user_get: typeof (req.user) == 'undefined' ? null : req.user, state : false });
+                        obj.socket_data.sockets.emit('state_run', { user_get: typeof (req.user) == 'undefined' ? null : req.user, state: false });
                         return false;
                     }
                 })()
-    
+
                 ///////////////////////////////////////////////
             } catch (e) {
                 console.log("lỗi selenium ngoài cùng!" + e);
-                obj.socket_data.sockets.emit('state_run', { user_get: typeof (req.user) == 'undefined' ? null : req.user, state : false });
+                obj.socket_data.sockets.emit('state_run', { user_get: typeof (req.user) == 'undefined' ? null : req.user, state: false });
                 return false;
             }
 
             ///////////////////////////////////////////////
         } catch (e) {
             console.log("lỗi selenium ngoài cùng!" + e);
-            obj.socket_data.sockets.emit('state_run', { user_get: typeof (req.user) == 'undefined' ? null : req.user, state : false });
+            obj.socket_data.sockets.emit('state_run', { user_get: typeof (req.user) == 'undefined' ? null : req.user, state: false });
             return false;
         }
     });
