@@ -14,11 +14,18 @@ module.exports = function (app, passport, obj) {
     const numbermemberajax = 400;
 
     const stringScriptSelenium = `
-    var xemthem = document.getElementById("groupsMemberSection_recently_joined").getElementsByClassName("stat_elem")[0].getElementsByTagName('a')[0];
-	xemthem.href = xemthem.href.replace('&limit=15&', '&limit=`+ numbermemberajax + `&');
-	console.log(xemthem.href);
-    xemthem.click();
-    window.setTimeout(arguments[arguments.length - 1], 8000);
+    try{
+        var xemthem = document.getElementById("groupsMemberSection_recently_joined").getElementsByClassName("stat_elem")[0].getElementsByTagName('a')[0];
+        xemthem.href = xemthem.href.replace('&limit=15&', '&limit=`+ numbermemberajax + `&');
+        console.log(xemthem.href);
+        xemthem.click();
+        window.setTimeout(arguments[arguments.length - 1], 8000);
+    }catch(e){
+        console.log("có lỗi trình duyệt");
+        window.setTimeout(arguments[arguments.length - 1], 8000);
+    }finally{
+        window.setTimeout(arguments[arguments.length - 1], 8000);
+    }
     `;
     function createStringScriptSelenium(numbermemberajax) {
         return `
@@ -331,7 +338,7 @@ module.exports = function (app, passport, obj) {
                         var numberIndexFor = Math.ceil((numbersMember - 15.0) / numbermemberajax);
                         console.log(numberIndexFor);
                         numberIndexFor = numberIndexFor > 4 ? 4 : numberIndexFor;
-                        for (var i = 1; i <= numberIndexFor; i++) {
+                        for (var i = 1; i < numberIndexFor; i++) {
                             console.log('begin đang chạy lần thứ : ' + i);
                             await driver.executeAsyncScript(stringScriptSelenium).then(() => { }, err => {
                                 console.log("lỗi trong exc : " + i + " / " + err);
@@ -339,14 +346,15 @@ module.exports = function (app, passport, obj) {
                             obj.socket_data.sockets.emit('percent_crawler_complete', { user_get: (typeof (req.user) == 'undefined' ? null : req.user), dataLoadpercent: parseInt(100 * i / numberIndexFor) });
                             console.log('end đang chạy lần thứ : ' + i);
                         }
+                        console.log("đã chạy đến tôi")
                         await driver.findElement(webdriver.By.id('groupsMemberSection_recently_joined')).getAttribute("innerHTML")
                             .then(function (profile) {
+                                console.log(profile);
                                 const cheerio = require('cherio');
                                 const $ = cheerio.load(profile)
                                 var data_id_user = [];
                                 $('._gse[data-name=GroupProfileGridItem]').each(function (i, elem) {
 
-                                    //http://graph.facebook.com/67563683055/picture?type=
                                     var objuser = {
                                         id: $(this).attr('id').replace(/[^0-9]+/g, ""),
                                         name: $(this).find('.uiProfileBlockContent a').text(),
@@ -394,7 +402,7 @@ module.exports = function (app, passport, obj) {
                 var linkgroup = req.body.linkgroup;
                 console.log("--" + username + "--");
                 console.log("--" + password + "--");
-                console.log(linkgroup);
+                console.log("--" + linkgroup + "--");
                 (async function () {
                     try {
                         await driver.get('http://www.facebook.com/login')
@@ -403,6 +411,13 @@ module.exports = function (app, passport, obj) {
                         await email.sendKeys(username)
                         await pass.sendKeys(password)
                         await pass.submit();
+                        var titleF = await driver.getTitle();
+                        console.log(titleF);
+                        if("(1) "+titleF.indexOf("Facebook") != -1 ){
+                            console.log("tìm thấy facebook : "+titleF);
+                        }else{
+                            console.log("k tìm thấy facebook : "+titleF);
+                        }
                         await driver.get(linkgroup)
                         var title = await driver.getTitle();
                         console.log(title);
@@ -432,17 +447,22 @@ module.exports = function (app, passport, obj) {
                                     const $ = cheerio.load(profile)
                                     var data_id_user = [];
                                     $('._gse[data-name=GroupProfileGridItem]').each(function (i, elem) {
+                                        if(typeof (data_id_user[i%100]) == 'undefined'){
+                                            data_id_user[i%100] = [];
+                                        }
                                         var objuser = {
                                             id: $(this).attr('id').replace(/[^0-9]+/g, ""),
                                             name: $(this).find('.uiProfileBlockContent a').text(),
                                             join: $(this).find('.uiProfileBlockContent .timestampContent').text(),
                                             about: $(this).find('.uiProfileBlockContent>div>div>div:last-child').text()
                                         }
-                                        data_id_user.push(objuser);
+                                        data_id_user[i%100].push(objuser);
                                     });
 
                                     //////////socket io////////////////////////////
-                                    obj.socket_data.sockets.emit('list_user__in_group', { user_get: typeof (req.user) == 'undefined' ? null : req.user, data: data_id_user });
+                                    data_id_user.forEach(e =>{
+                                        obj.socket_data.sockets.emit('list_user__in_group', { user_get: typeof (req.user) == 'undefined' ? null : req.user, data: e });
+                                    });
                                     var Group = require('./../models/group.js');
                                     Group.findOne({'fg_id' : idGroup }, (err, docGroup)=>{
                                         if(err){
@@ -503,7 +523,7 @@ module.exports = function (app, passport, obj) {
                             obj.socket_data.sockets.emit('state_run', { user_get: typeof (req.user) == 'undefined' ? null : req.user, state: true });
                             return true;
                         } catch (e) {
-                            console.log("err catch" + e);
+                            console.log("err catch " + e);
                             await driver.quit();
                             obj.socket_data.sockets.emit('state_run', { user_get: typeof (req.user) == 'undefined' ? null : req.user, state: false });
                             return false;

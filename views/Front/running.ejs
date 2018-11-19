@@ -256,7 +256,7 @@
                     about: 'sdfgh fnaf sfnsajsan asdnsadjasn asdnsadjsa sajdnja '
                 },
                 {
-                    id : 100005642797103, 
+                    id : 100005642797103,
                     name : 'mỹ hoa',
                     about: 'sdfgh fnaf sfnsajsan asdnsadjasn asdnsadjsa sajdnja '
                 }
@@ -293,7 +293,7 @@
             });
             socket.on('list_user__in_group', function (data) {
                 console.log(data);
-                app.dataUserFacebook = data.data;
+                app.dataUserFacebook = app.dataUserFacebook.concat(data.data);
                 ////create list user id : 
                 var arrrayIDUserFaceSend = [];
                 for(var i = 0 ; i < data.data.length ; i++){
