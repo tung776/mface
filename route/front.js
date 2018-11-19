@@ -228,20 +228,20 @@ module.exports = function (app, passport, obj) {
         }
         return res.render('Front/sent-message.ejs', data);
     });
-    
-    
+
+
     app.get("/test-save", function (req, res) {
         var Group = require("./../models/group");
         var newGroup = new Group();
         newGroup.name = req.body.groupName;
         newGroup.link = req.body.groupLink;
         newGroup.id = req.body.groupId;
-        newGroup.save(err=>{
+        newGroup.save(err => {
             if (err) return handleError(err);
         });
         res.send("hùng thực hiện xong");
     });
-    
+
     app.post('/sent-messager', (req, res, next) => {
         if (!req.isAuthenticated()) {
             return res.redirect('/sign-in');
@@ -254,7 +254,7 @@ module.exports = function (app, passport, obj) {
         // Create simple echo bot
         login({ email: req.body.username, password: req.body.password }, (err, api) => {
             if (err) {
-                obj.socket_data.sockets.emit('percent_sent_message_complete', { user_get: (typeof (req.user) == 'undefined' ? null : req.user), dataLoadMessagePercent: 100, error : true });
+                obj.socket_data.sockets.emit('percent_sent_message_complete', { user_get: (typeof (req.user) == 'undefined' ? null : req.user), dataLoadMessagePercent: 100, error: true });
                 return console.error(err);
             }
             obj.socket_data.sockets.emit('percent_sent_message_complete', { user_get: (typeof (req.user) == 'undefined' ? null : req.user), dataLoadMessagePercent: 2 });
@@ -262,13 +262,13 @@ module.exports = function (app, passport, obj) {
             var dataUserFacebook = JSON.parse(req.body.dataUserFacebook);
             console.log(dataUserFacebook);
             var variableForDataUser = dataUserFacebook.length;
-            
+
             //cứ 2s lôi db ra mà chạy
             var indexCodeTimeout = 10;
             function myFunction() {
-                console.log('begin run send message at '+ indexCodeTimeout);
+                console.log('begin run send message at ' + indexCodeTimeout);
                 api.sendMessage(req.body.message, dataUserFacebook[variableForDataUser - indexCodeTimeout], (err) => {
-                    console.log("send done : "  );
+                    console.log("send done : ");
                     console.log(err);
                     obj.socket_data.sockets.emit('percent_sent_message_complete', { user_get: (typeof (req.user) == 'undefined' ? null : req.user), dataLoadMessagePercent: 5 });
                 });
@@ -277,10 +277,10 @@ module.exports = function (app, passport, obj) {
                 }
                 indexCodeTimeout--;
                 if (indexCodeTimeout > 0) {
-                    setTimeout(myFunction, (Math.floor(Math.random() * 10)%5)*1000 + 5000);
+                    setTimeout(myFunction, (Math.floor(Math.random() * 10) % 5) * 1000 + 5000);
                 }
             }
-            myFunction(indexCodeTimeout , 2000);
+            myFunction(indexCodeTimeout, 2000);
             obj.socket_data.sockets.emit('percent_sent_message_complete', { user_get: (typeof (req.user) == 'undefined' ? null : req.user), dataLoadMessagePercent: 100 });
         });
     });
@@ -392,6 +392,7 @@ module.exports = function (app, passport, obj) {
     }, function (req, res) {
         try {
             try {
+                
                 res.redirect('/running');
                 var webdriver = require('selenium-webdriver');
                 var driver = new webdriver.Builder()
@@ -413,121 +414,185 @@ module.exports = function (app, passport, obj) {
                         await pass.submit();
                         var titleF = await driver.getTitle();
                         console.log(titleF);
-                        if("(1) "+titleF.indexOf("Facebook") != -1 ){
-                            console.log("tìm thấy facebook : "+titleF);
-                        }else{
-                            console.log("k tìm thấy facebook : "+titleF);
-                        }
-                        await driver.get(linkgroup)
-                        var title = await driver.getTitle();
-                        console.log(title);
-                        var idGroup = await driver.findElement(webdriver.By.id('headerArea')).findElement(webdriver.By.className('clearfix')).getAttribute("id"); 
-                        idGroup = idGroup.replace("headerAction_", "");
-                        console.log('Page title is: ' + idGroup);
-
-                        obj.socket_data.sockets.emit('groupinfor', { user_get: (typeof (req.user) == 'undefined' ? null : req.user), group : { name : title, link : linkgroup , id :  idGroup} });
-                        obj.socket_data.sockets.emit('percent_crawler_complete', { user_get: (typeof (req.user) == 'undefined' ? null : req.user), dataLoadpercent: 2 });
-                        try {
-                            var numbersMember = await driver.findElement(webdriver.By.id('groupsMemberBrowser')).findElement(webdriver.By.className('_grm')).findElement(webdriver.By.tagName('span')).getText();
-                            numbersMember = numbersMember.replace(/\./g, "");
-                            numbersMember = parseInt(numbersMember);
-                            var numberIndexFor = Math.ceil((numbersMember - 15.0) / numbermemberajax);
-                            console.log(numberIndexFor);
-                            for (var i = 1; i <= numberIndexFor; i++) {
-                                console.log('begin đang chạy lần thứ : ' + i);
-                                await driver.executeAsyncScript(stringScriptSelenium).then(() => { }, err => {
-                                    console.log("lỗi trong exc : " + i + " / " + err);
-                                });//
-                                obj.socket_data.sockets.emit('percent_crawler_complete', { user_get: (typeof (req.user) == 'undefined' ? null : req.user), dataLoadpercent: parseInt(100 * i / numberIndexFor) });
-                                console.log('end đang chạy lần thứ : ' + i);
-                            }
-                            await driver.findElement(webdriver.By.id('groupsMemberSection_recently_joined')).getAttribute("innerHTML")
-                                .then(function (profile) {
-                                    const cheerio = require('cherio');
-                                    const $ = cheerio.load(profile)
-                                    var data_id_user = [];
-                                    $('._gse[data-name=GroupProfileGridItem]').each(function (i, elem) {
-                                        if(typeof (data_id_user[i%100]) == 'undefined'){
-                                            data_id_user[i%100] = [];
-                                        }
-                                        var objuser = {
-                                            id: $(this).attr('id').replace(/[^0-9]+/g, ""),
-                                            name: $(this).find('.uiProfileBlockContent a').text(),
-                                            join: $(this).find('.uiProfileBlockContent .timestampContent').text(),
-                                            about: $(this).find('.uiProfileBlockContent>div>div>div:last-child').text()
-                                        }
-                                        data_id_user[i%100].push(objuser);
+                        if ("(1) " + titleF.indexOf("Facebook") != -1) {
+                            console.log("tìm thấy facebook : " + titleF);
+                            await driver.get(linkgroup)
+                            var title = await driver.getTitle();
+                            console.log(title);
+                            var idGroup = await driver.findElement(webdriver.By.id('headerArea')).findElement(webdriver.By.className('clearfix')).getAttribute("id");
+                            idGroup = idGroup.replace("headerAction_", "");
+                            console.log('Page title is: ' + idGroup);
+                            /////////save group////////////////////////////////////
+                            var Group = require('./../models/group.js');
+                            Group.findOne({ 'fg_id': idGroup }, (err, docGroup) => {
+                                if (err) {
+                                    console.log("find group có lỗi : " + err);
+                                }
+                                if (!docGroup) {
+                                    ////thêm group vào 
+                                    var new_group = new Group();
+                                    new_group.fg_id = idGroup;
+                                    new_group.fg_link = linkgroup;
+                                    new_group.fg_name = title;
+                                    new_group.save(function (err) {
+                                        if (err) {
+                                            console.log("có lỗi save group : " + new_group.fg_id + " / " + err);
+                                            return handleError(err)
+                                        };
                                     });
-
-                                    //////////socket io////////////////////////////
-                                    data_id_user.forEach(e =>{
-                                        obj.socket_data.sockets.emit('list_user__in_group', { user_get: typeof (req.user) == 'undefined' ? null : req.user, data: e });
-                                    });
-                                    var Group = require('./../models/group.js');
-                                    Group.findOne({'fg_id' : idGroup }, (err, docGroup)=>{
-                                        if(err){
-                                            console.log("find group có lỗi : " + err);
-                                        }
-                                        if(!docGroup){
-                                            ////thêm group vào 
-                                            var new_group = new Group();
-                                            new_group.fg_id = idGroup;
-                                            new_group.fg_link = linkgroup;
-                                            new_group.fg_name = title;
-                                            new_group.save(function (err) {
-                                                if (err) {
-                                                    console.log("có lỗi save group : " +new_group.fg_id + " / "+ err);
-                                                    return handleError(err)
-                                                };
-                                            });
-                                        }
-                                    });
-                                    var User = require('./../models/user.js');
-                                    data_id_user.forEach(e => {
-                                        var tuser = new User();
-                                        tuser.f_name = e.name;
-                                        tuser.f_id = e.id;
-                                        tuser.f_join = e.join;
-                                        tuser.f_about = e.about;
-                                        tuser.f_group = [idGroup];
-                                        User.findOne({ 'f_id': e.id }, function (err, docUser) {
-                                            if (err){
-                                                console.log("có lỗi khi check id facebook đã tồn tại trong hệ thống")
+                                }
+                            });
+                            ///////////////////////////////////////////////
+                            var userEmitSocket = (typeof (req.user) == 'undefined' ? null : req.user);
+                            ///////////////////////////////////////////////
+                            obj.socket_data.sockets.emit(
+                                'percent_crawler_complete',
+                                { 
+                                    user_get: userEmitSocket, 
+                                    type : "group",
+                                    data: { 
+                                        name: title, 
+                                        link: linkgroup, 
+                                        id: idGroup 
+                                    } 
+                                }
+                            );
+                            obj.socket_data.sockets.emit(
+                                'percent_crawler_complete', 
+                                { 
+                                    user_get: userEmitSocket, 
+                                    type : "loadPercent",
+                                    data: 2 
+                                }
+                            );
+                            try {
+                                var numbersMember = await driver.findElement(webdriver.By.id('groupsMemberBrowser')).findElement(webdriver.By.className('_grm')).findElement(webdriver.By.tagName('span')).getText();
+                                numbersMember = numbersMember.replace(/\./g, "");
+                                numbersMember = parseInt(numbersMember);
+                                var numberIndexFor = Math.ceil((numbersMember - 15.0) / numbermemberajax);
+                                console.log(numberIndexFor);
+                                if(userEmitSocket != 'undefined'){
+                                    if(userEmitSocket.quyen != "AdminUser"){
+                                        var newNumberIndexFor = (numberIndexFor > 10 ? 10 : numberIndexFor);
+                                        console.log("numberIndexFor đã đc giới hạn thành max là 10");
+                                        obj.socket_data.sockets.emit(
+                                            'percent_crawler_complete', 
+                                            { 
+                                                user_get    : userEmitSocket, 
+                                                type        : "numberForCrawler",
+                                                data        : {
+                                                    formatForCrawler    : newNumberIndexFor,
+                                                    messages            : "đã sửa đổi từ "+numberIndexFor+ " qua "+ newNumberIndexFor
+                                                } 
                                             }
-                                            if (docUser) {
-                                                var indexIdGroup = docUser.f_group.findIndex(e => e == idGroup);
-                                                if(indexIdGroup == -1 ){
-                                                    ////lưu thêm group
-                                                    docUser.f_group.push(idGroup);
-                                                    docUser.save(function (err) {
+                                        );
+                                    }else{
+                                        console.log("numberIndexFor không giới hạn vì là admin mface");
+                                        obj.socket_data.sockets.emit(
+                                            'percent_crawler_complete', 
+                                            { 
+                                                user_get    : userEmitSocket, 
+                                                type        : "numberForCrawler",
+                                                data        : {
+                                                    formatForCrawler    : numberIndexFor,
+                                                    messages            : "không sửa đổi"
+                                                } 
+                                            }
+                                        );
+                                    }
+                                }
+                                for (var i = 1; i <= numberIndexFor; i++) {
+                                    console.log('begin đang chạy lần thứ : ' + i);
+                                    await driver.executeAsyncScript(stringScriptSelenium).then(() => { }, err => {
+                                        console.log("lỗi trong exc : " + i + " / " + err);
+                                    });
+                                    var varLoadPercent = parseInt(100 * i / numberIndexFor);
+                                    obj.socket_data.sockets.emit(
+                                        'percent_crawler_complete', 
+                                        { 
+                                            user_get: userEmitSocket, 
+                                            type : "loadPercent",
+                                            dataLoadpercent: ( varLoadPercent == 100? 99 : varLoadPercent) 
+                                        }
+                                    );
+                                    console.log('end đang chạy lần thứ : ' + i);
+                                }
+                                await driver.findElement(webdriver.By.id('groupsMemberSection_recently_joined')).getAttribute("innerHTML")
+                                    .then(function (profile) {
+                                        const cheerio = require('cherio');
+                                        const $ = cheerio.load(profile);
+                                        var data_id_user = [];
+                                        $('._gse[data-name=GroupProfileGridItem]').each(function (i, elem) {
+                                            var objuser = {
+                                                id: $(this).attr('id').replace(/[^0-9]+/g, ""),
+                                                name: $(this).find('.uiProfileBlockContent a').text(),
+                                                join: $(this).find('.uiProfileBlockContent .timestampContent').text(),
+                                                about: $(this).find('.uiProfileBlockContent>div>div>div:last-child').text()
+                                            }
+                                            data_id_user.push(objuser);
+                                        });
+
+                                        //////////socket io////////////////////////////
+                                        obj.socket_data.sockets.emit(
+                                            'percent_crawler_complete', 
+                                            { 
+                                                user_get    : userEmitSocket, 
+                                                type        : "list_user__in_group",
+                                                data        : data_id_user
+                                            }
+                                        );
+
+                                        var User = require('./../models/user.js');
+                                        data_id_user.forEach(e => {
+                                            var tuser = new User();
+                                            tuser.f_name = e.name;
+                                            tuser.f_id = e.id;
+                                            tuser.f_join = e.join;
+                                            tuser.f_about = e.about;
+                                            tuser.f_group = [idGroup];
+                                            User.findOne({ 'f_id': e.id }, function (err, docUser) {
+                                                if (err) {
+                                                    console.log("có lỗi khi check id facebook đã tồn tại trong hệ thống")
+                                                }
+                                                if (docUser) {
+                                                    var indexIdGroup = docUser.f_group.findIndex(e => e == idGroup);
+                                                    if (indexIdGroup == -1) {
+                                                        ////lưu thêm group
+                                                        docUser.f_group.push(idGroup);
+                                                        docUser.save(function (err) {
+                                                            if (err) {
+                                                                console.log("có lỗi save user : " + e.id + " / " + err);
+                                                                return handleError(err)
+                                                            };
+                                                        });
+                                                    } else {
+                                                        console.log("user " + docUser.id + " đã tồn tại trong hệ thống");
+                                                    }
+                                                } else {
+                                                    tuser.save(function (err) {
                                                         if (err) {
-                                                            console.log("có lỗi save user : " +e.id + " / "+ err);
+                                                            console.log("có lỗi save user : " + e.id + " / " + err);
                                                             return handleError(err)
                                                         };
                                                     });
-                                                }else {
-                                                    console.log("user "+ docUser.id + " đã tồn tại trong hệ thống");
                                                 }
-                                            } else {
-                                                tuser.save(function (err) {
-                                                    if (err) {
-                                                        console.log("có lỗi save user : " +e.id + " / "+ err);
-                                                        return handleError(err)
-                                                    };
-                                                });
-                                            }
+                                            });
                                         });
+                                        
                                     });
-                                });
-                            await driver.quit();
-                            obj.socket_data.sockets.emit('state_run', { user_get: typeof (req.user) == 'undefined' ? null : req.user, state: true });
-                            return true;
-                        } catch (e) {
-                            console.log("err catch " + e);
-                            await driver.quit();
-                            obj.socket_data.sockets.emit('state_run', { user_get: typeof (req.user) == 'undefined' ? null : req.user, state: false });
-                            return false;
+                                await driver.quit();
+                                obj.socket_data.sockets.emit('state_run', { user_get: typeof (req.user) == 'undefined' ? null : req.user, state: true });
+                                return true;
+                            } catch (e) {
+                                console.log("err catch " + e);
+                                await driver.quit();
+                                obj.socket_data.sockets.emit('state_run', { user_get: typeof (req.user) == 'undefined' ? null : req.user, state: false });
+                                return false;
+                            }
+                        } else {
+                            console.log("k tìm thấy facebook : " + titleF);
                         }
+
                     } catch (e) {
                         console.log('lỗi : ', e);
                         obj.socket_data.sockets.emit('state_run', { user_get: typeof (req.user) == 'undefined' ? null : req.user, state: false });
