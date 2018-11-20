@@ -27,35 +27,7 @@ module.exports = function (app, passport, obj) {
         window.setTimeout(arguments[arguments.length - 1], 8000);
     }
     `;
-    function createStringScriptSelenium(numbermemberajax) {
-        return `
-        if(!document.getElementById("MFace_old_document_height")){
-            var parent = document.getElementsByTagName('body')[0];
-            var newChild = '<p id="MFace_old_document_height">0</p>';
-            parent.insertAdjacentHTML('afterbegin', newChild);
-        }
 
-        
-        var old_document_height = document.body.clientHeight;
-        document.getElementById("MFace_old_document_height").innerHTML = old_document_height;
-
-        var xemthem = document.getElementById("groupsMemberSection_recently_joined").getElementsByClassName("stat_elem")[0].getElementsByTagName('a')[0];
-        xemthem.href = xemthem.href.replace('&limit=15&', '&limit=400&');
-        console.log(xemthem.href);
-        xemthem.click();
-
-        window.setTimeout(function(){
-            var old_docu_height = document.getElementById("MFace_old_document_height").innerHTML;
-            console.log("trước là hàng cũ trước 5s "+ old_docu_height + " / " + document.body.clientHeight + " " + new Date())
-            if(old_docu_height < document.body.clientHeight){
-                console.log("lớn hơn rùi" + new Date())
-                arguments[arguments.length - 1];
-            }else{
-                console.log(123456789);
-            }
-        },6000);
-        `;
-    };
     app.get('/', (req, res) => {
 
         var data = {
@@ -230,17 +202,6 @@ module.exports = function (app, passport, obj) {
     });
 
 
-    app.get("/test-save", function (req, res) {
-        var Group = require("./../models/group");
-        var newGroup = new Group();
-        newGroup.name = req.body.groupName;
-        newGroup.link = req.body.groupLink;
-        newGroup.id = req.body.groupId;
-        newGroup.save(err => {
-            if (err) return handleError(err);
-        });
-        res.send("hùng thực hiện xong");
-    });
 
     app.post('/sent-messager', (req, res, next) => {
         if (!req.isAuthenticated()) {
@@ -303,85 +264,7 @@ module.exports = function (app, passport, obj) {
         }
         res.render('Front/running.ejs', data);
     });
-    app.get("/selenium/phantom", function (req, res) {
-        try {
-            res.redirect('/running');
-            var webdriver = require('selenium-webdriver');
-            var driver = new webdriver.Builder()
-                .forBrowser('phantomjs')
-                .build();
-            var username = '';
-            var password = '';
-            var linkgroup = 'https://www.facebook.com/groups/TOEICTNTRAM/members/';
-            var messageClient = 'req.body.message';
-            if (!username.trim()) { username = '+841217581480'; password = 'hungtt@266' }
-            console.log(username);
-            console.log(password);
-            console.log(linkgroup);
-            console.log(messageClient);
-            (async function () {
-                try {
-                    await driver.get('http://www.facebook.com/login')
-                    var email = await driver.findElement(webdriver.By.name('email'));
-                    var pass = await driver.findElement(webdriver.By.name('pass'));
-                    await email.sendKeys(username)
-                    await pass.sendKeys(password)
-                    await pass.submit();
-                    await driver.get(linkgroup)
-                    var title = await driver.getTitle()
-                    console.log('Page title is: ' + title);
-                    obj.socket_data.sockets.emit('percent_crawler_complete', { user_get: (typeof (req.user) == 'undefined' ? null : req.user), dataLoadpercent: 2 });
-                    try {
-                        var numbersMember = await driver.findElement(webdriver.By.id('groupsMemberBrowser')).findElement(webdriver.By.className('_grm')).findElement(webdriver.By.tagName('span')).getText();
-                        numbersMember = numbersMember.replace(/\./g, "");
-                        numbersMember = parseInt(numbersMember);
-                        var numberIndexFor = Math.ceil((numbersMember - 15.0) / numbermemberajax);
-                        console.log(numberIndexFor);
-                        numberIndexFor = numberIndexFor > 4 ? 4 : numberIndexFor;
-                        for (var i = 1; i < numberIndexFor; i++) {
-                            console.log('begin đang chạy lần thứ : ' + i);
-                            await driver.executeAsyncScript(stringScriptSelenium).then(() => { }, err => {
-                                console.log("lỗi trong exc : " + i + " / " + err);
-                            });//
-                            obj.socket_data.sockets.emit('percent_crawler_complete', { user_get: (typeof (req.user) == 'undefined' ? null : req.user), dataLoadpercent: parseInt(100 * i / numberIndexFor) });
-                            console.log('end đang chạy lần thứ : ' + i);
-                        }
-                        console.log("đã chạy đến tôi")
-                        await driver.findElement(webdriver.By.id('groupsMemberSection_recently_joined')).getAttribute("innerHTML")
-                            .then(function (profile) {
-                                console.log(profile);
-                                const cheerio = require('cherio');
-                                const $ = cheerio.load(profile)
-                                var data_id_user = [];
-                                $('._gse[data-name=GroupProfileGridItem]').each(function (i, elem) {
 
-                                    var objuser = {
-                                        id: $(this).attr('id').replace(/[^0-9]+/g, ""),
-                                        name: $(this).find('.uiProfileBlockContent a').text(),
-                                        join: $(this).find('.uiProfileBlockContent .timestampContent').text(),
-                                        about: $(this).find('.uiProfileBlockContent>div>div>div:last-child').text()
-                                    }
-                                    data_id_user.push(objuser);
-
-                                });
-                                //////////socket io////////////////////////////
-                                obj.socket_data.sockets.emit('list_user__in_group', { user_get: typeof (req.user) == 'undefined' ? null : req.user, data: data_id_user });
-                            });
-                        await driver.quit();
-                    } catch (e) {
-                        console.log("err catch" + e);
-                        await driver.quit();
-                    }
-                } catch (e) {
-                    console.log('lỗi : ', e);
-                }
-            })()
-
-            ///////////////////////////////////////////////
-        } catch (e) {
-            console.log("lỗi selenium ngoài cùng!" + e)
-        }
-    });
 
     app.post("/run-service", (req, res, next) => {
         if (!req.isAuthenticated()) {
@@ -390,7 +273,11 @@ module.exports = function (app, passport, obj) {
             next();
         }
     }, function (req, res) {
+        
         try {
+            ///////////////////////////////////////////////
+            var userEmitSocket = (typeof (req.user) == 'undefined' ? null : req.user);
+            ///////////////////////////////////////////////
             try {
                 
                 res.redirect('/running');
@@ -442,9 +329,7 @@ module.exports = function (app, passport, obj) {
                                     });
                                 }
                             });
-                            ///////////////////////////////////////////////
-                            var userEmitSocket = (typeof (req.user) == 'undefined' ? null : req.user);
-                            ///////////////////////////////////////////////
+                            
                             obj.socket_data.sockets.emit(
                                 'percent_crawler_complete',
                                 { 
@@ -471,9 +356,10 @@ module.exports = function (app, passport, obj) {
                                 numbersMember = parseInt(numbersMember);
                                 var numberIndexFor = Math.ceil((numbersMember - 15.0) / numbermemberajax);
                                 console.log(numberIndexFor);
+                                var newNumberIndexFor = numberIndexFor;
                                 if(userEmitSocket != 'undefined'){
                                     if(userEmitSocket.quyen != "AdminUser"){
-                                        var newNumberIndexFor = (numberIndexFor > 10 ? 10 : numberIndexFor);
+                                        newNumberIndexFor = (numberIndexFor > 10 ? 10 : numberIndexFor);
                                         console.log("numberIndexFor đã đc giới hạn thành max là 10");
                                         obj.socket_data.sockets.emit(
                                             'percent_crawler_complete', 
@@ -501,18 +387,18 @@ module.exports = function (app, passport, obj) {
                                         );
                                     }
                                 }
-                                for (var i = 1; i <= numberIndexFor; i++) {
+                                for (var i = 1; i <= newNumberIndexFor; i++) {
                                     console.log('begin đang chạy lần thứ : ' + i);
                                     await driver.executeAsyncScript(stringScriptSelenium).then(() => { }, err => {
                                         console.log("lỗi trong exc : " + i + " / " + err);
                                     });
-                                    var varLoadPercent = parseInt(100 * i / numberIndexFor);
+                                    var varLoadPercent = parseInt(100 * i / newNumberIndexFor);
                                     obj.socket_data.sockets.emit(
                                         'percent_crawler_complete', 
                                         { 
                                             user_get: userEmitSocket, 
                                             type : "loadPercent",
-                                            dataLoadpercent: ( varLoadPercent == 100? 99 : varLoadPercent) 
+                                            data: ( varLoadPercent == 100? 99 : varLoadPercent) 
                                         }
                                     );
                                     console.log('end đang chạy lần thứ : ' + i);
@@ -549,7 +435,6 @@ module.exports = function (app, passport, obj) {
                                             tuser.f_id = e.id;
                                             tuser.f_join = e.join;
                                             tuser.f_about = e.about;
-                                            tuser.f_group = [idGroup];
                                             User.findOne({ 'f_id': e.id }, function (err, docUser) {
                                                 if (err) {
                                                     console.log("có lỗi khi check id facebook đã tồn tại trong hệ thống")
@@ -569,6 +454,7 @@ module.exports = function (app, passport, obj) {
                                                         console.log("user " + docUser.id + " đã tồn tại trong hệ thống");
                                                     }
                                                 } else {
+                                                    tuser.f_group = [ idGroup ];
                                                     tuser.save(function (err) {
                                                         if (err) {
                                                             console.log("có lỗi save user : " + e.id + " / " + err);
@@ -578,24 +464,63 @@ module.exports = function (app, passport, obj) {
                                                 }
                                             });
                                         });
-                                        
+
                                     });
                                 await driver.quit();
-                                obj.socket_data.sockets.emit('state_run', { user_get: typeof (req.user) == 'undefined' ? null : req.user, state: true });
+                                obj.socket_data.sockets.emit(
+                                    'percent_crawler_complete', 
+                                    { 
+                                        user_get    : userEmitSocket, 
+                                        type        : "state_run",
+                                        data        : {
+                                            state : true
+                                        } 
+                                    }
+                                );
                                 return true;
                             } catch (e) {
                                 console.log("err catch " + e);
                                 await driver.quit();
-                                obj.socket_data.sockets.emit('state_run', { user_get: typeof (req.user) == 'undefined' ? null : req.user, state: false });
+                                obj.socket_data.sockets.emit(
+                                    'percent_crawler_complete', 
+                                    { 
+                                        user_get    : userEmitSocket, 
+                                        type        : "state_run",
+                                        data        : {
+                                            state : false
+                                        } 
+                                    }
+                                );
                                 return false;
                             }
                         } else {
                             console.log("k tìm thấy facebook : " + titleF);
+                            await driver.quit();
+                            obj.socket_data.sockets.emit(
+                                'percent_crawler_complete', 
+                                { 
+                                    user_get    : userEmitSocket, 
+                                    type        : "state_run",
+                                    data        : {
+                                        state : false
+                                    } 
+                                }
+                            );
+                            return false;
                         }
 
                     } catch (e) {
                         console.log('lỗi : ', e);
-                        obj.socket_data.sockets.emit('state_run', { user_get: typeof (req.user) == 'undefined' ? null : req.user, state: false });
+                        obj.socket_data.sockets.emit(
+                            'percent_crawler_complete', 
+                            { 
+                                user_get    : userEmitSocket, 
+                                type        : "state_run",
+                                data        : {
+                                    state : false
+                                } 
+                            }
+                        );
                         return false;
                     }
                 })()
@@ -603,93 +528,36 @@ module.exports = function (app, passport, obj) {
                 ///////////////////////////////////////////////
             } catch (e) {
                 console.log("lỗi selenium ngoài cùng!" + e);
-                obj.socket_data.sockets.emit('state_run', { user_get: typeof (req.user) == 'undefined' ? null : req.user, state: false });
+                obj.socket_data.sockets.emit(
+                    'percent_crawler_complete', 
+                    { 
+                        user_get    : userEmitSocket, 
+                        type        : "state_run",
+                        data        : {
+                            state : false
+                        } 
+                    }
+                );
                 return false;
             }
 
             ///////////////////////////////////////////////
         } catch (e) {
             console.log("lỗi selenium ngoài cùng!" + e);
-            obj.socket_data.sockets.emit('state_run', { user_get: typeof (req.user) == 'undefined' ? null : req.user, state: false });
+            obj.socket_data.sockets.emit(
+                'percent_crawler_complete', 
+                { 
+                    user_get    : userEmitSocket, 
+                    type        : "state_run",
+                    data        : {
+                        state : false
+                    } 
+                }
+            );
             return false;
         }
     });
-    app.get("/selenium/chrome", function (req, res) {
-        try {
-            res.redirect('/running');
-            var webdriver = require('selenium-webdriver');
-            var chromeCapabilities = webdriver.Capabilities.chrome()
-            var chromeOptions = {
-                'args': ['--disable-infobars', "--disable-notifications"]
-            };
-            chromeCapabilities.set('chromeOptions', chromeOptions);
-            var driver = new webdriver.Builder()
-                .forBrowser('chrome')
-                .withCapabilities(chromeCapabilities)
-                .build();
-            var username = '';
-            var password = '';
-            var linkgroup = 'https://www.facebook.com/groups/1365709000190455/members/';
-            var messageClient = 'req.body.message';
-            if (!username.trim()) { username = 'jbtruongthanhhung@gmail.com'; password = 'hungtt@266' }
-            console.log(username);
-            console.log(password);
-            console.log(linkgroup);
-            console.log(messageClient);
-            //const webdriver = require('selenium-webdriver');
-            (async function () {
-                try {
-                    await driver.get('http://www.facebook.com')
-                    var email = await driver.findElement(webdriver.By.name('email'));
-                    var pass = await driver.findElement(webdriver.By.name('pass'));
-                    await email.sendKeys(username)
-                    await pass.sendKeys(password)
-                    await pass.submit();//https://www.facebook.com/groups/TOEICTNTRAM/members/
-                    driver.manage().timeouts().setScriptTimeout(12000);
-                    await driver.get(linkgroup)
-                    var title = await driver.getTitle()
-                    console.log('Page title is: ' + title);
-                    try {
-                        var numbersMember = await driver.findElement(webdriver.By.id('groupsMemberBrowser')).findElement(webdriver.By.className('_grm')).findElement(webdriver.By.tagName('span')).getText();
-                        numbersMember = numbersMember.replace(/\./g, "");
-                        numbersMember = parseInt(numbersMember);
-                        var numberIndexFor = Math.ceil((numbersMember - 15.0) / numbermemberajax);
-                        console.log(numberIndexFor);
-                        for (var i = 0; i < numberIndexFor; i++) {
-                            console.log('begin đang chạy lần thứ : ' + i);
-                            await driver.executeAsyncScript(stringScriptSelenium).then((data) => {
-                                console.log("đây là return not timeout của data : " + data);
-                            }, err => {
-                                console.log(new Date());
-                                console.log("lỗi trong exc :  / " + err);
-                            });
-                            console.log('end đang chạy lần thứ : ' + i);
-                        }
-                        await driver.findElement(webdriver.By.id('groupsMemberSection_recently_joined')).getAttribute("innerHTML").then(function (profile) {
-                            const cheerio = require('cherio')
-                            const $ = cheerio.load(profile)
-                            var data_id_user = [];
-                            $('._gse[data-name=GroupProfileGridItem]').each(function (i, elem) {
-                                // Range Name
-                                console.log("iteration - ", i);
-                                console.log("name - ", $(this).attr('id'));
-                                data_id_user.push($(this).attr('id'));
-                            });
-                        });
-                        //await driver.quit();
-                    } catch (e) {
-                        console.log("err catch" + e);
-                        await driver.quit();
-                    }
-
-                } catch (e) {
-                    console.log('lỗi : ', e);
-                }
-            })()
-        } catch (e) {
-            console.log("lỗi selenium ngoài cùng!" + e)
-        }
-    });
+    
 }
 
 

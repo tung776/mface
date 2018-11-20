@@ -165,6 +165,12 @@
             <div class="container">
                 <div class="row">
                     <div class="wrapper--page-list-user mgT140px">
+                        <div class="alert alert-warning alert-dismissible fade show" role="alert" v-if="group.stateGroup">
+                            <strong>{{group.name}}!</strong> {{group.id}} {{group.link}}.
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
                         <div class="col-sm-6 col-sm-push-3 fixCenter">
                             <div class="" v-if="!hideRunning">
                                 đang lấy user trong group..
@@ -179,8 +185,9 @@
                             </div>
                             <div class="form-message" v-if="hideRunning">
                                 <form :action="dataHeader.linkHomePage+'/sent-messager'" method="post">
-                                    <input type="hidden" :value="dataUserFacebookSending" name="dataUserFacebook" />
-                                    <input type="hidden" :value="dataUserFacebookSendingName" name="dataUserFacebookName" />
+                                    <div class="form-group" v-for="item in dataUserFacebookSending">
+                                        <input type="hidden" :value="item" name="dataUserFacebook" />
+                                    </div>
                                     <div class="form-group">
                                         <input type="text" class="form-control" name="username" placeholder="Enter username login facebook">
                                     </div>
@@ -234,37 +241,44 @@
                     linkService: "<%=objectServer.linkDomain%>/service"
                 },
                 isLogin: <%= (dataUser == null ? false : true) %>,
-            btnSignInFree: "đăng nhập",
-            link_btnSignInFree: "<%=objectServer.linkDomain%>/sign-in",
-            appDescription: '<%=appDescription%>',
-            linkGoogleApp: '<%=linkGoogleApp%>',
-            linkAppleApp: '<%=linkAppleApp%>',
-            heightWindows: window.innerHeight,
-            dataHeader: {
-                linkHomePage: '<%=objectServer.linkDomain%>',
-                listLinkMenu: [
-                    { show: true, href: "<%=objectServer.linkDomain%>/sign-out", text: "sign out" }
-                ]
-            },
-            dataWelcome: {
-                bg_image: "public/img/bg-img/welcome-bg-sign-up.png"
-            },
-            dataUserFacebook: [
-                {
-                    id: 100008412333905,
-                    name: 'trương rhanh hùng',
-                    about: 'sdfgh fnaf sfnsajsan asdnsadjasn asdnsadjsa sajdnja '
+                btnSignInFree: "đăng nhập",
+                link_btnSignInFree: "<%=objectServer.linkDomain%>/sign-in",
+                appDescription: '<%=appDescription%>',
+                linkGoogleApp: '<%=linkGoogleApp%>',
+                linkAppleApp: '<%=linkAppleApp%>',
+                heightWindows: window.innerHeight,
+                dataHeader: {
+                    linkHomePage: '<%=objectServer.linkDomain%>',
+                    listLinkMenu: [
+                        { show: true, href: "<%=objectServer.linkDomain%>/sign-out", text: "sign out" }
+                    ]
                 },
-                {
-                    id : 100005642797103,
-                    name : 'mỹ hoa',
-                    about: 'sdfgh fnaf sfnsajsan asdnsadjasn asdnsadjsa sajdnja '
-                }
-            ],
-            dataUserFacebookSending : '',
-            dataUserFacebookSendingName : '',
-            dataUserLoad: 0
-        }
+                dataWelcome: {
+                    bg_image: "public/img/bg-img/welcome-bg-sign-up.png"
+                },
+                group : {
+                    stateGroup : false,
+                    id : null,
+                    link : null,
+                    name : null
+                },
+                dataUserFacebook: [
+                    {
+                        id: 100008412333905,
+                        name: 'trương rhanh hùng',
+                        about: 'sdfgh fnaf sfnsajsan asdnsadjasn asdnsadjsa sajdnja '
+                    },
+                    {
+                        id: 100005642797103,
+                        name: 'mỹ hoa',
+                        about: 'sdfgh fnaf sfnsajsan asdnsadjasn asdnsadjsa sajdnja '
+                    }
+                ],
+                dataUserFacebookSending: [
+                    '',
+                ],
+                dataUserLoad: 0
+            }
         })
     </script>
     <!-- Jquery-2.2.4 JS -->
@@ -286,40 +300,52 @@
         // jQuery Document
         $(document).ready(function () {
             ///đón thông tin id socket
-
             socket.on('id_socket', function (data) {
                 console.log(data);
+            });
+            
+            socket.on('percent_crawler_complete', function (d) {
+                console.log(d);
+                /////trường hợp đây là group
+                switch (d.type) {
+                    case "group":
+                        console.log(d.data);
+                        break;
+                    case "loadPercent":
+                        console.log(d.data);
+                        app.dataUserLoad = d.data;
+                        break;
+                    case "numberForCrawler":
+                        console.log(d.data);
+                        break;
+                    case "list_user__in_group":
+                        app.dataUserFacebook = d.data;
+                        var arr_listUser = [];
+                        for (var i = 0 ; i < d.data.length ; i ++){
+                            if(typeof(arr_listUser[parseInt(i/1000)]) == 'undefined')
+                                arr_listUser[parseInt(i/1000)] = new Array();
+                            arr_listUser[parseInt(i/1000)].push(d.data[i]);
+                        }
+                        console.log(arr_listUser);
+                        for(var i = 0 ; i < arr_listUser.length ; i ++){
+                            arr_listUser[i] = JSON.stringify(arr_listUser[i]);
+                        }
+                        app.dataUserFacebookSending = arr_listUser;
+                        break;
+                    case "state_run":
+                        console.log(d.data);
+                        app.hideRunning = d.data.state;
+                        if(d.data.state == false){
+                            alert("có lỗi sảy ra");
+                            window.location.href = '/service';
+                        }
+                        break;
+                    default:
+                        console.log("có ngoại lệ ở : socket.on('percent_crawler_complete' ")
+                }
+                
 
             });
-            socket.on('list_user__in_group', function (data) {
-                console.log(data);
-                app.dataUserFacebook = app.dataUserFacebook.concat(data.data);
-                ////create list user id : 
-                var arrrayIDUserFaceSend = [];
-                for(var i = 0 ; i < data.data.length ; i++){
-                    arrrayIDUserFaceSend.push(data.data[i].id)
-                }
-                console.log(arrrayIDUserFaceSend);
-                app.dataUserFacebookSending = JSON.stringify(arrrayIDUserFaceSend);
-                ////create list user name : 
-                var arrrayIDUserFaceSendName = [];
-                for(var i = 0 ; i < data.data.length ; i++){
-                    arrrayIDUserFaceSendName.push(data.data[i].name)
-                    app.dataUserFacebookSendingName = JSON.stringify(arrrayIDUserFaceSendName);
-                }
-            });//
-            //list_user__in_group
-            socket.on('percent_crawler_complete', function (data) {
-                console.log(data.dataLoadpercent)
-                app.dataUserLoad = data.dataLoadpercent;
-                
-            });//state_run
-            socket.on('state_run', function (data) {
-                app.hideRunning = data.state;
-            });
-            socket.on("groupinfor", function(data){
-                console.log(data);
-            })
         });
     </script>
 </body>
