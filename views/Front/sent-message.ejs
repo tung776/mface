@@ -260,13 +260,31 @@
         // jQuery Document
         $(document).ready(function () {
             ///đón thông tin id socket
-
             socket.on('id_socket', function (data) {
                 console.log(data);
-
             });
-            socket.on('percent_sent_message_complete', function (data) {
-                console.log(data);
+            
+            socket.on('percent_sent_complete', function (d) {
+                console.log(d);
+                /////trường hợp đây là group
+                switch (d.type) {
+                    case "loadPercent":
+                        console.log(d.data);
+                        app.dataUserLoad = d.data;
+                        break;
+                    case "error":
+                        console.log(d.data);
+                        if(d.data.error){
+                            alert("có lỗi sảy ra");
+                            window.location.href = '/';
+                        }
+                        break;
+                    
+                    default:
+                        console.log("có ngoại lệ ở : socket.on('percent_sent_complete' ")
+                }
+                
+
             });
         });
     </script>

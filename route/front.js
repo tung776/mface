@@ -210,31 +210,79 @@ module.exports = function (app, passport, obj) {
             next();
         }
     }, (req, res) => {
+        ///////////////////////////////////////////////
+        var userEmitSocket = (typeof (req.user) == 'undefined' ? null : req.user);
+        ///////////////////////////////////////////////
         res.redirect('/sending');
         const login = require("facebook-chat-api");
         // Create simple echo bot
         login({ email: req.body.username, password: req.body.password }, (err, api) => {
             if (err) {
-                obj.socket_data.sockets.emit('percent_sent_message_complete', { user_get: (typeof (req.user) == 'undefined' ? null : req.user), dataLoadMessagePercent: 100, error: true });
+                obj.socket_data.sockets.emit(
+                    'percent_sent_complete',
+                    {
+                        user_get: userEmitSocket,
+                        type: "error",
+                        data: {
+                            dataLoadMessagePercent: 100,
+                            error: true
+                        }
+                    }
+                );
                 return console.error(err);
             }
-            obj.socket_data.sockets.emit('percent_sent_message_complete', { user_get: (typeof (req.user) == 'undefined' ? null : req.user), dataLoadMessagePercent: 2 });
-            console.log("data id : " + req.body.dataUserFacebook)
-            var dataUserFacebook = JSON.parse(req.body.dataUserFacebook);
-            console.log(dataUserFacebook);
-            var variableForDataUser = dataUserFacebook.length;
-
+            obj.socket_data.sockets.emit('percent_sent_complete',
+                {
+                    user_get: userEmitSocket,
+                    type: "loadPercent",
+                    data: {
+                        dataLoadMessagePercent: 2,
+                        error: false
+                    }
+                }
+            );
+            var arrUserString = req.body.dataUserFacebook;
+            var arrUserObj = [];
+            console.log(" số lượng phần tử : "+arrUserString.length+ " giả sử đúng");
+            for(var i = 0 ; i < arrUserString.length ; i ++){
+                var dataUser = JSON.parse(arrUserString[i]);
+                arrUserObj = arrUserObj.concat(dataUser)
+            }
+            /////
+            console.log("giả sử nối không lỗi");
+            console.log(arrUserObj);
+            var variableForDataUser = arrUserObj.length;
             //cứ 2s lôi db ra mà chạy
             var indexCodeTimeout = 10;
             function myFunction() {
                 console.log('begin run send message at ' + indexCodeTimeout);
-                api.sendMessage(req.body.message, dataUserFacebook[variableForDataUser - indexCodeTimeout], (err) => {
+                api.sendMessage(req.body.message, arrUserObj[variableForDataUser - indexCodeTimeout], (err) => {
                     console.log("send done : ");
                     console.log(err);
-                    obj.socket_data.sockets.emit('percent_sent_message_complete', { user_get: (typeof (req.user) == 'undefined' ? null : req.user), dataLoadMessagePercent: 5 });
+                    obj.socket_data.sockets.emit(
+                        'percent_sent_complete',
+                        {
+                            user_get: userEmitSocket,
+                            type: "error",
+                            data: {
+                                dataLoadMessagePercent: 100,
+                                error: true
+                            }
+                        }
+                    );
                 });
                 if ((variableForDataUser - indexCodeTimeout) % 40 == 0) {
-                    obj.socket_data.sockets.emit('percent_sent_message_complete', { user_get: (typeof (req.user) == 'undefined' ? null : req.user), dataLoadMessagePercent: parseInt(100 * (variableForDataUser - indexCodeTimeout) / variableForDataUser) });
+                    obj.socket_data.sockets.emit(
+                        'percent_sent_complete',
+                        {
+                            user_get: userEmitSocket,
+                            type: "loadPercent",
+                            data: {
+                                dataLoadMessagePercent: parseInt(100 * (variableForDataUser - indexCodeTimeout) / variableForDataUser),
+                                error: false
+                            }
+                        }
+                    );
                 }
                 indexCodeTimeout--;
                 if (indexCodeTimeout > 0) {
@@ -242,7 +290,17 @@ module.exports = function (app, passport, obj) {
                 }
             }
             myFunction(indexCodeTimeout, 2000);
-            obj.socket_data.sockets.emit('percent_sent_message_complete', { user_get: (typeof (req.user) == 'undefined' ? null : req.user), dataLoadMessagePercent: 100 });
+            obj.socket_data.sockets.emit(
+                'percent_sent_complete',
+                {
+                    user_get: userEmitSocket,
+                    type: "loadPercent",
+                    data: {
+                        dataLoadMessagePercent: 100,
+                        error: false
+                    }
+                }
+            );
         });
     });
     app.get('/running', (req, res, next) => {
@@ -273,13 +331,13 @@ module.exports = function (app, passport, obj) {
             next();
         }
     }, function (req, res) {
-        
+
         try {
             ///////////////////////////////////////////////
             var userEmitSocket = (typeof (req.user) == 'undefined' ? null : req.user);
             ///////////////////////////////////////////////
             try {
-                
+
                 res.redirect('/running');
                 var webdriver = require('selenium-webdriver');
                 var driver = new webdriver.Builder()
@@ -329,25 +387,25 @@ module.exports = function (app, passport, obj) {
                                     });
                                 }
                             });
-                            
+
                             obj.socket_data.sockets.emit(
                                 'percent_crawler_complete',
-                                { 
-                                    user_get: userEmitSocket, 
-                                    type : "group",
-                                    data: { 
-                                        name: title, 
-                                        link: linkgroup, 
-                                        id: idGroup 
-                                    } 
+                                {
+                                    user_get: userEmitSocket,
+                                    type: "group",
+                                    data: {
+                                        name: title,
+                                        link: linkgroup,
+                                        id: idGroup
+                                    }
                                 }
                             );
                             obj.socket_data.sockets.emit(
-                                'percent_crawler_complete', 
-                                { 
-                                    user_get: userEmitSocket, 
-                                    type : "loadPercent",
-                                    data: 2 
+                                'percent_crawler_complete',
+                                {
+                                    user_get: userEmitSocket,
+                                    type: "loadPercent",
+                                    data: 2
                                 }
                             );
                             try {
@@ -357,32 +415,32 @@ module.exports = function (app, passport, obj) {
                                 var numberIndexFor = Math.ceil((numbersMember - 15.0) / numbermemberajax);
                                 console.log(numberIndexFor);
                                 var newNumberIndexFor = numberIndexFor;
-                                if(userEmitSocket != 'undefined'){
-                                    if(userEmitSocket.quyen != "AdminUser"){
+                                if (userEmitSocket != 'undefined') {
+                                    if (userEmitSocket.quyen != "AdminUser") {
                                         newNumberIndexFor = (numberIndexFor > 10 ? 10 : numberIndexFor);
                                         console.log("numberIndexFor đã đc giới hạn thành max là 10");
                                         obj.socket_data.sockets.emit(
-                                            'percent_crawler_complete', 
-                                            { 
-                                                user_get    : userEmitSocket, 
-                                                type        : "numberForCrawler",
-                                                data        : {
-                                                    formatForCrawler    : newNumberIndexFor,
-                                                    messages            : "đã sửa đổi từ "+numberIndexFor+ " qua "+ newNumberIndexFor
-                                                } 
+                                            'percent_crawler_complete',
+                                            {
+                                                user_get: userEmitSocket,
+                                                type: "numberForCrawler",
+                                                data: {
+                                                    formatForCrawler: newNumberIndexFor,
+                                                    messages: "đã sửa đổi từ " + numberIndexFor + " qua " + newNumberIndexFor
+                                                }
                                             }
                                         );
-                                    }else{
+                                    } else {
                                         console.log("numberIndexFor không giới hạn vì là admin mface");
                                         obj.socket_data.sockets.emit(
-                                            'percent_crawler_complete', 
-                                            { 
-                                                user_get    : userEmitSocket, 
-                                                type        : "numberForCrawler",
-                                                data        : {
-                                                    formatForCrawler    : numberIndexFor,
-                                                    messages            : "không sửa đổi"
-                                                } 
+                                            'percent_crawler_complete',
+                                            {
+                                                user_get: userEmitSocket,
+                                                type: "numberForCrawler",
+                                                data: {
+                                                    formatForCrawler: numberIndexFor,
+                                                    messages: "không sửa đổi"
+                                                }
                                             }
                                         );
                                     }
@@ -394,11 +452,11 @@ module.exports = function (app, passport, obj) {
                                     });
                                     var varLoadPercent = parseInt(100 * i / newNumberIndexFor);
                                     obj.socket_data.sockets.emit(
-                                        'percent_crawler_complete', 
-                                        { 
-                                            user_get: userEmitSocket, 
-                                            type : "loadPercent",
-                                            data: ( varLoadPercent == 100? 99 : varLoadPercent) 
+                                        'percent_crawler_complete',
+                                        {
+                                            user_get: userEmitSocket,
+                                            type: "loadPercent",
+                                            data: (varLoadPercent == 100 ? 99 : varLoadPercent)
                                         }
                                     );
                                     console.log('end đang chạy lần thứ : ' + i);
@@ -420,11 +478,11 @@ module.exports = function (app, passport, obj) {
 
                                         //////////socket io////////////////////////////
                                         obj.socket_data.sockets.emit(
-                                            'percent_crawler_complete', 
-                                            { 
-                                                user_get    : userEmitSocket, 
-                                                type        : "list_user__in_group",
-                                                data        : data_id_user
+                                            'percent_crawler_complete',
+                                            {
+                                                user_get: userEmitSocket,
+                                                type: "list_user__in_group",
+                                                data: data_id_user
                                             }
                                         );
 
@@ -454,7 +512,7 @@ module.exports = function (app, passport, obj) {
                                                         console.log("user " + docUser.id + " đã tồn tại trong hệ thống");
                                                     }
                                                 } else {
-                                                    tuser.f_group = [ idGroup ];
+                                                    tuser.f_group = [idGroup];
                                                     tuser.save(function (err) {
                                                         if (err) {
                                                             console.log("có lỗi save user : " + e.id + " / " + err);
@@ -468,13 +526,13 @@ module.exports = function (app, passport, obj) {
                                     });
                                 await driver.quit();
                                 obj.socket_data.sockets.emit(
-                                    'percent_crawler_complete', 
-                                    { 
-                                        user_get    : userEmitSocket, 
-                                        type        : "state_run",
-                                        data        : {
-                                            state : true
-                                        } 
+                                    'percent_crawler_complete',
+                                    {
+                                        user_get: userEmitSocket,
+                                        type: "state_run",
+                                        data: {
+                                            state: true
+                                        }
                                     }
                                 );
                                 return true;
@@ -482,13 +540,13 @@ module.exports = function (app, passport, obj) {
                                 console.log("err catch " + e);
                                 await driver.quit();
                                 obj.socket_data.sockets.emit(
-                                    'percent_crawler_complete', 
-                                    { 
-                                        user_get    : userEmitSocket, 
-                                        type        : "state_run",
-                                        data        : {
-                                            state : false
-                                        } 
+                                    'percent_crawler_complete',
+                                    {
+                                        user_get: userEmitSocket,
+                                        type: "state_run",
+                                        data: {
+                                            state: false
+                                        }
                                     }
                                 );
                                 return false;
@@ -497,13 +555,13 @@ module.exports = function (app, passport, obj) {
                             console.log("k tìm thấy facebook : " + titleF);
                             await driver.quit();
                             obj.socket_data.sockets.emit(
-                                'percent_crawler_complete', 
-                                { 
-                                    user_get    : userEmitSocket, 
-                                    type        : "state_run",
-                                    data        : {
-                                        state : false
-                                    } 
+                                'percent_crawler_complete',
+                                {
+                                    user_get: userEmitSocket,
+                                    type: "state_run",
+                                    data: {
+                                        state: false
+                                    }
                                 }
                             );
                             return false;
@@ -512,13 +570,13 @@ module.exports = function (app, passport, obj) {
                     } catch (e) {
                         console.log('lỗi : ', e);
                         obj.socket_data.sockets.emit(
-                            'percent_crawler_complete', 
-                            { 
-                                user_get    : userEmitSocket, 
-                                type        : "state_run",
-                                data        : {
-                                    state : false
-                                } 
+                            'percent_crawler_complete',
+                            {
+                                user_get: userEmitSocket,
+                                type: "state_run",
+                                data: {
+                                    state: false
+                                }
                             }
                         );
                         return false;
@@ -529,13 +587,13 @@ module.exports = function (app, passport, obj) {
             } catch (e) {
                 console.log("lỗi selenium ngoài cùng!" + e);
                 obj.socket_data.sockets.emit(
-                    'percent_crawler_complete', 
-                    { 
-                        user_get    : userEmitSocket, 
-                        type        : "state_run",
-                        data        : {
-                            state : false
-                        } 
+                    'percent_crawler_complete',
+                    {
+                        user_get: userEmitSocket,
+                        type: "state_run",
+                        data: {
+                            state: false
+                        }
                     }
                 );
                 return false;
@@ -545,19 +603,19 @@ module.exports = function (app, passport, obj) {
         } catch (e) {
             console.log("lỗi selenium ngoài cùng!" + e);
             obj.socket_data.sockets.emit(
-                'percent_crawler_complete', 
-                { 
-                    user_get    : userEmitSocket, 
-                    type        : "state_run",
-                    data        : {
-                        state : false
-                    } 
+                'percent_crawler_complete',
+                {
+                    user_get: userEmitSocket,
+                    type: "state_run",
+                    data: {
+                        state: false
+                    }
                 }
             );
             return false;
         }
     });
-    
+
 }
 
 

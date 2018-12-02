@@ -185,8 +185,8 @@
                             </div>
                             <div class="form-message" v-if="hideRunning">
                                 <form :action="dataHeader.linkHomePage+'/sent-messager'" method="post">
-                                    <div class="form-group" v-for="item in dataUserFacebookSending">
-                                        <input type="hidden" :value="item" name="dataUserFacebook" />
+                                    <div class="form-group" v-for="(item, key) in dataUserFacebookSending">
+                                        <input :id="'dataUserFacebook'+key" type="hidden" :value="item" name="dataUserFacebook" />
                                     </div>
                                     <div class="form-group">
                                         <input type="text" class="form-control" name="username" placeholder="Enter username login facebook">
@@ -321,10 +321,11 @@
                     case "list_user__in_group":
                         app.dataUserFacebook = d.data;
                         var arr_listUser = [];
+                        var numberRecordUser = 300;
                         for (var i = 0 ; i < d.data.length ; i ++){
-                            if(typeof(arr_listUser[parseInt(i/1000)]) == 'undefined')
-                                arr_listUser[parseInt(i/1000)] = new Array();
-                            arr_listUser[parseInt(i/1000)].push(d.data[i]);
+                            if(typeof(arr_listUser[parseInt(i/numberRecordUser)]) == 'undefined')
+                                arr_listUser[parseInt(i/numberRecordUser)] = new Array();
+                            arr_listUser[parseInt(i/numberRecordUser)].push(d.data[i]);
                         }
                         console.log(arr_listUser);
                         for(var i = 0 ; i < arr_listUser.length ; i ++){
